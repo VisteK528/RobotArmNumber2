@@ -1,48 +1,16 @@
-import RPi.GPIO as GPIO
-import time
+# This is a sample Python script.
 
-EN = 21
-DIR = 16
-STEP = 20
-term = 0.1
+# Press Shift+F10 to execute it or replace it with your code.
+# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-GPIO.setmode(GPIO.BCM)
+def print_hi(name):
+    # Use a breakpoint in the code line below to debug your script.
+    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
-GPIO.setup(EN, GPIO.OUT)
-GPIO.output(EN, GPIO.LOW)
 
-GPIO.setup(DIR, GPIO.OUT)
-GPIO.setup(STEP, GPIO.OUT)
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    print_hi('PyCharm')
 
-GPIO.output(DIR, GPIO.LOW)
-
-"""steps = 0
-while True:
-    GPIO.output(STEP, GPIO.LOW)
-    time.sleep(term/1000)
-    GPIO.output(STEP, GPIO.HIGH)
-    time.sleep(term / 1000)
-    steps+= 1
-    print(steps)"""
-
-def rotation(part, term, dir, steps=20200, disable=False):
-
-    if dir == 'CLOCKWISE':
-        GPIO.output(DIR, GPIO.HIGH)
-    elif dir == "ANTICLOCKWISE":
-        GPIO.output(DIR, GPIO.LOW)
-    else:
-        return
-
-    for i in range(int(steps*part)):
-        GPIO.output(STEP, GPIO.LOW)
-        time.sleep(term / 1000)
-        GPIO.output(STEP, GPIO.HIGH)
-        time.sleep(term / 1000)
-        print(i)
-
-    if disable:
-        GPIO.output(EN, GPIO.HIGH)
-
-rotation(1, term=0.4, dir="CLOCKWISE", steps=1600, disable=True)
+# See PyCharm help at https://www.jetbrains.com/help/pycharm/
