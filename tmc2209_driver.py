@@ -7,7 +7,6 @@ class TMC2209:
         self._STEP = step
         self._DIR = dir
         self._EN = en
-        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self._EN, GPIO.OUT)
         GPIO.output(self._EN, GPIO.LOW)
 
@@ -32,7 +31,7 @@ class TMC2209:
     def enable(self):
         GPIO.output(self._EN, GPIO.LOW)
 
-    def move_to_pos(self, steps, dir, accel=0.01):
+    def move_steps(self, steps, dir, accel=0.01):
         delays = []
         angle = 1
         accel = accel
@@ -76,7 +75,7 @@ class TMC2209:
         delays2 = [delay/1000000 for delay in delays]
 
 
-        GPIO.output(self._DIR, GPIO.HIGH)
+        GPIO.output(self._DIR, dir)
         for delay in delays2:
             GPIO.output(self._STEP, GPIO.LOW)
             time.sleep(delay)
@@ -88,15 +87,6 @@ class TMC2209:
             time.sleep(delay)
             GPIO.output(self._STEP, GPIO.HIGH)
 
-
-class
-
-# Waist
-# Shoulder 20:124 -> 200 steps per revolution, ~9925.55 steps per one shoulder revolution
-shoulder = TMC2209(en=21, dir=16, step=20)
-waist = TMC2209(en=26, dir=13, step=19)
-shoulder.move_to_pos(4500, dir=GPIO.HIGH)
-#waist.move_to_pos(20200, dir=GPIO.HIGH, accel=0.0007)
 
 
 
