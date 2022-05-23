@@ -1,0 +1,19 @@
+
+
+shoulder_start = 100+90
+
+
+waist_angle = 0
+waist_angle_fix = 0
+
+
+waist_base_height = 0
+shoulder_mount_height = 0           #110 mm
+
+shoulder_length = 20.748                  #207,48 mmm
+elbow_length = 21.5                    #138,38 mm
+elbow_length_real = 13.838
+
+
+
+SHOULDER_OFFSET = 190
