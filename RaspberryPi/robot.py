@@ -48,12 +48,12 @@ class Joint:
 
                 new_pos = abs(new_pos)
                 steps = self._degrees_to_steps(new_pos)
-                print(steps)
-                print("Steps: ", int(steps), "   ", "Direction: ", direction)
+                #print(steps)
+                #print("Steps: ", int(steps), "   ", "Direction: ", direction)
                 self.driver.move_steps(int(steps), direction, accel=self.driver.max_acceleration)
 
                 self.position = pos
-                print("New position", self.position)
+                #print("New position", self.position)
 
 
     def home(self, multipicator=1):
