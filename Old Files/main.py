@@ -1,12 +1,9 @@
 from robot import Joint, EndStop
 from tmc2209_driver import TMC2209, DM556Driver, AN4988Driver
 import RPi.GPIO as GPIO
-from usb_control import DriverSerialControl
 import time
-import threading as th
-import socket
 import pigpio
-from pos_algorithm import PositionAlgorithm
+from RaspberryPi.pos_algorithm import PositionAlgorithm
 
 # Pi GPIO initialization
 pi = pigpio.pi()

@@ -1,11 +1,7 @@
 from robot import Joint, EndStop
 from tmc2209_driver import TMC2209, DM556Driver
 import RPi.GPIO as GPIO
-from usb_control import DriverSerialControl
-from algorithm import Algorithm
 import time
-import threading as th
-import socket
 
 host = '192.168.0.108'
 port = 5560
