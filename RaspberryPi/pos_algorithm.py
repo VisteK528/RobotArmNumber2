@@ -71,22 +71,58 @@ class PositionAlgorithm:
 
         self.rad_beta = math.acos((self.ab_sect**2+self.bc_sect**2-self.ac_sect**2)/(2*self.ab_sect*self.bc_sect))
 
-        self.rad_theta=math.pi-(self.rad_alfa+self.rad_beta)
-
+        self.rad_theta = math.pi-(self.rad_alfa+self.rad_beta)
 
         self.update_base_robot_angles()
         self.update_robot_adapted_base_robot_angles()
 
         self.d = (x, y)
         self.c = (new_x, y)
-        self.b = (math.sqrt(self.ab_sect**2/(1+math.tan(self.alfa)**2)),
-                  math.tan(self.alfa)*math.sqrt(self.ab_sect**2/(1+math.tan(self.alfa)**2)))
+        b_x = math.sqrt(self.ab_sect**2/(1+math.tan(self.rad_alfa)**2))
+        b_y = math.tan(self.rad_alfa) * b_x
+
+        if 90 < self.alfa < 180:
+            b_x = math.sqrt(self.ab_sect ** 2 / (1 + math.tan(self.rad_alfa) ** 2))
+            b_y = math.tan(self.rad_alfa) * b_x
+            b_x *= -1
+            b_y *= -1
+
+        self.b = (b_x, b_y)
         self.a = (0, self.h)
 
+        #print(self.a, self.b, self.c, self.d)
         return self.alfa, self.beta, self.theta
 
-    def calc_arm_pos_horizontally_adapted(self, x, y):
-        self.calc_arm_pos_horizontally(x, y)
+    def calc_arm_pos_vertically(self, x, y):
+        new_y = y - self.h
+        new_y2 = new_y + self.cd_sect
+
+        self.ac_sect = math.sqrt(x**2 + new_y2**2)
+
+        alfa2 = math.atan(new_y2 / x)
+        alfa1 = math.acos(
+            (self.ab_sect ** 2 + self.ac_sect ** 2 - self.bc_sect ** 2) / (2 * self.ab_sect * self.ac_sect))
+        self.rad_alfa = alfa2 + alfa1
+
+        self.rad_beta = math.acos(
+            (self.ab_sect ** 2 + self.bc_sect ** 2 - self.ac_sect ** 2) / (2 * self.ab_sect * self.bc_sect))
+
+        self.rad_theta = math.pi - (self.rad_alfa + self.rad_beta) - math.pi/2
+
+        self.update_base_robot_angles()
         self.update_robot_adapted_base_robot_angles()
 
-        return self.r_alfa, self.r_beta, self.r_theta
+        self.d = (x, y)
+        self.c = (x, y+self.cd_sect)
+        b_x = round(math.sqrt(self.ab_sect ** 2 / (1 + math.tan(self.rad_alfa) ** 2)), 3)
+        b_y = round(math.tan(self.rad_alfa) * b_x, 3)
+
+        if 90 < self.alfa < 180:
+            b_x *= -1
+            b_y *= -1
+
+        self.b = (b_x, b_y)
+        self.a = (0, self.h)
+
+        print(self.a, self.b, self.c, self.d)
+        return self.alfa, self.beta, self.theta

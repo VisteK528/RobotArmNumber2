@@ -176,7 +176,7 @@ algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effecto
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo)
-robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
+robot.home_all_joints(waist=True, shoulder=False, elbow=False, roll=False, pitch=False)
 #robot.home_all_joints()
 robot.console(algorithm=algorithm)
 #robot.position(algorithm)
