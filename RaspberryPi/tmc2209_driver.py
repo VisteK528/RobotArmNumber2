@@ -89,6 +89,14 @@ class TMC2209:
             time.sleep(delay)
             GPIO.output(self._STEP, GPIO.HIGH)
 
+    def set_direction(self, direction):
+        GPIO.output(self._DIR, direction)
+
+    def move_del(self, delay):
+        GPIO.output(self._STEP, GPIO.LOW)
+        time.sleep(delay)
+        GPIO.output(self._STEP, GPIO.HIGH)
+
     def constant_accel(self, steps, dir, accel=0.01):
         delays = []
         angle = 1

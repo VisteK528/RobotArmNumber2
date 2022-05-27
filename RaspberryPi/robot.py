@@ -166,42 +166,67 @@ class Joint:
             direction = GPIO.LOW
             direction2 = GPIO.HIGH
 
-        accel_dels = self.movement.accelerate_to_velocity(0.5)
+        accel_dels = self.movement.accelerate_to_velocity(0.25)
         accel_dels2 = self.movement.accelerate_to_velocity(0.05)
 
-        phase_time1 = self.movement.constant_angular_velocity(0.5)
+        phase_time1 = self.movement.constant_angular_velocity(0.2)
         phase_time2 = self.movement.constant_angular_velocity(0.05)
 
         while True:
+            # Direction set
+            self.driver.set_direction(direction)
+            print('Part1')
             for x in accel_dels:
                 self.driver.move_del(x)
                 if self.sensor.check_sensor():
-                    self.driver.move_steps(200, direction2, accel=0.001)
-                    for x2 in accel_dels2:
-                        self.driver.move_del(x2)
-                        if self.sensor.check_sensor():
-                            break
+                    break
+
+            print("Part 2")
+            if self.sensor.check_sensor():
+                self.driver.move_steps(200, direction2, accel=0.001)
+                self.driver.set_direction(direction)
+                for x2 in accel_dels2:
+                    self.driver.move_del(x2)
+                    if self.sensor.check_sensor():
+                        break
+                if self.sensor.check_sensor():
+                    break
+                else:
                     while True:
                         self.driver.move_del(phase_time2)
                         if self.sensor.check_sensor():
                             break
-                    break
-
-            while True:
-                self.driver.move_del(phase_time1)
+            else:
+                while True:
+                    self.driver.move_del(phase_time1)
+                    if self.sensor.check_sensor():
+                        break
                 if self.sensor.check_sensor():
                     self.driver.move_steps(200, direction2, accel=0.001)
+                    self.driver.set_direction(direction)
                     for x2 in accel_dels2:
                         self.driver.move_del(x2)
                         if self.sensor.check_sensor():
                             break
-                    break
-
-            if self.sensor.check_sensor():
-                break
-
+                    if self.sensor.check_sensor():
+                        break
+                    else:
+                        while True:
+                            self.driver.move_del(phase_time2)
+                            if self.sensor.check_sensor():
+                                break
+            break
         self.position = 0
-        self.position += self.offset
+        if self.offset != 0:
+            if self.offset < 0:
+                offset = abs(self.offset)
+                steps = ((offset / self.driver.motor_resolution) / (
+                        self.driver.gear_teeth / self.gear_teeth)) * self.driver.driver_resolution
+                print("Steps: ", steps)
+                self.driver.move_steps(int(steps), direction, accel=0.005)
+            elif self.offset > 0:
+                self.set_angle(self.offset)
+        self.position = 0
 
 class OldJoint:
     def __init__(self, driver, sensor, gear_teeth, min_pos, max_pos, offset=0,
