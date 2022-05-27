@@ -1,7 +1,6 @@
 from robot import Joint, EndStop
 from tmc2209_driver import TMC2209, DM556Driver, AN4988Driver
 import RPi.GPIO as GPIO
-from usb_control import DriverSerialControl
 import time
 import threading as th
 import socket
@@ -13,13 +12,11 @@ pi = pigpio.pi()
 
 GPIO.setmode(GPIO.BCM)
 
-# Shoulder 20:124 -> 200 steps per revolution, ~9925.55 steps per one shoulder revolution
 waist_driver = TMC2209(en=26, dir=13, step=19, resolution=0.9, gear_teeth=20)
 waist_endstop = EndStop(SIGNAL_PIN=12, type='up')
 waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, min_pos=-1, max_pos=358, gear_teeth=125, offset=60,
                     homing_direction='ANTICLOCKWISE')
 
-# driver = DriverSerialControl(port="/dev/ttyACM0", baudrate=115200, resolution=1.8, gear_teeth=20)
 shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_resolution=1.8, gear_teeth=20)
 shoulder_driver.set_max_speed(500)
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
@@ -60,7 +57,8 @@ class Servo:
 
 
 class Robot:
-    def __init__(self, waist, shoulder, elbow, roll, pitch, effector):
+    def __init__(self, waist, shoulder, elbow, roll, pitch, effector, position_algorithm):
+        #Joints and Effectors
         self.waist = waist
         self.shoulder = shoulder
         self.elbow = elbow
@@ -68,15 +66,28 @@ class Robot:
         self.pitch = pitch
         self.effector = effector
 
+        #Algorithms
+        self.position_algorithm = position_algorithm
+
         # Variables
         self._homed = None
+
+    def _move_joints_to_the_pos(self, x, y):
+        assert type(x), type(y) == float
+
+        self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
+
+        self.shoulder.set_angle(self.position_algorithm.r_alfa)
+        time.sleep(0.5)
+        self.elbow.set_angle(self.position_algorithm.r_beta)
+        time.sleep(0.5)
+        self.pitch.set_angle(self.position_algorithm.r_theta)
+        time.sleep(0.5)
 
     def home_all_joints(self, waist=True, shoulder=True, elbow=True, roll=True, pitch=True):
         counter = 0
         try:
             print('Homing all joints...')
-            #self.shoulder.position = 0
-            #self.shoulder.set_angle(10)
             if waist:
                 print("Waist homing... ", end='')
                 self.waist.home()
@@ -112,22 +123,15 @@ class Robot:
         except Exception as e:
             print(f"Homing failed due to error: {e}")
 
-    def console(self, algorithm):
+    def console(self):
         while True:
             message = input("").lower().split()
 
             if message[0] == "position":
                 x, y = float(message[1]), float(message[2])
 
-                algorithm.calc_arm_pos_horizontally_adapted(x, y)
+                self._move_joints_to_the_pos(x, y)
 
-                time.sleep(0.5)
-                self.shoulder.set_angle(algorithm.r_alfa)
-                time.sleep(0.5)
-                self.elbow.set_angle(algorithm.r_beta)
-                time.sleep(0.5)
-                self.pitch.set_angle(algorithm.r_theta)
-                time.sleep(0.5)
             elif message[0] == "move":
                 motor, angle = message[1], message[2]
                 if str(angle) == 'home':
@@ -156,30 +160,18 @@ class Robot:
                         self.effector.move_servo(float(angle))
             time.sleep(2)
 
-    def position(self, algorithm):
+    def position(self):
         while True:
             x, y = input("Podaj koordynaty: ").split()
             x, y = float(x), float(y)
 
-            algorithm.calc_arm_pos_horizontally_adapted(x, y)
-
-            time.sleep(0.5)
-            self.shoulder.set_angle(algorithm.r_alfa)
-            time.sleep(0.5)
-            self.elbow.set_angle(algorithm.r_beta)
-            time.sleep(0.5)
-            self.pitch.set_angle(algorithm.r_theta)
-            time.sleep(0.5)
+            self._move_joints_to_the_pos(x, y)
 
 algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=12, base_height=13,
                               shoulder_joint_offset=180, elbow_joint_offset=50.3, pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
-              pitch=wrist_pitch_joint, effector=servo)
+              pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
 robot.home_all_joints(waist=True, shoulder=False, elbow=False, roll=False, pitch=False)
-#robot.home_all_joints()
-robot.console(algorithm=algorithm)
+robot.console()
 #robot.position(algorithm)
-
-
-

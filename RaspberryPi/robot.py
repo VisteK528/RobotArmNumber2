@@ -122,6 +122,20 @@ class Joint:
         self.offset = offset
         self.base_angle = base_angle
 
+        # Homing Variables
+        self.homing_velocity = 0.25                     # Angular Velocity
+        self.homing_acceleration = 0.01                 # NOT ANGULAR VALUE             HAS TO BE CHANGED TO THE ANGULAR
+
+        self.homing_steps = 200
+
+        # Acceleration and Velocity Variables
+        self.max_velocity = 0.2                         # Angular Velocity
+        self.max_velocity = 1                           # NOT ANGULAR VALUE             HAS TO BE CHANGED TO THE ANGULAR
+
+        self.velocity = 0.35                            # Angular Velocity
+        self.acceleration = 0.01                        # NOT ANGULAR VALUE             HAS TO BE CHANGED TO THE ANGULAR
+
+        # Joint Algorithms
         self.movement = Movement(motor_step=self.driver.motor_resolution, driver_microstep=self.driver.driver_resolution,
                                  motor_shaft_gear_teeth=self.driver.gear_teeth, joint_gear_teeth=self.gear_teeth)
 
@@ -134,7 +148,6 @@ class Joint:
         if self.position is not None:
             if self.min_pos <= pos < self.max_pos:
                 new_pos = self.position - pos
-                #print("New pos: ", new_pos)
 
                 if self.direction == 'ANTICLOCKWISE':
                     if new_pos >= 0:
@@ -151,12 +164,9 @@ class Joint:
 
                 new_pos = abs(new_pos)
                 steps = self._degrees_to_steps(new_pos)
-                #print(steps)
-                #print("Steps: ", int(steps), "   ", "Direction: ", direction)
                 self.driver.move_steps(int(steps), direction, accel=self.driver.max_acceleration)
 
                 self.position = pos
-                #print("New position", self.position)
 
     def home(self):
         if self.direction == 'ANTICLOCKWISE':
@@ -166,53 +176,91 @@ class Joint:
             direction = GPIO.LOW
             direction2 = GPIO.HIGH
 
-        accel_dels = self.movement.accelerate_to_velocity(0.25)
-        accel_dels2 = self.movement.accelerate_to_velocity(0.05)
+        # Calculate delays for the motor to accelerate smoothly to the set homing velocity ( Angular Velocity )
+        # ( During PHASE 1 and PHASE 2 of the Homing procedure )
+        accel_dels = self.movement.accelerate_to_velocity(self.homing_velocity)
+        accel_dels2 = self.movement.accelerate_to_velocity(self.homing_velocity/5)
 
-        phase_time1 = self.movement.constant_angular_velocity(0.2)
-        phase_time2 = self.movement.constant_angular_velocity(0.05)
+        # Calculate delays for the motor to move smoothly with constant, homing velocity ( Angular Velocity )
+        # ( During PHASE 1 and PHASE 2 of the Homing procedure )
+        phase_time1 = self.movement.constant_angular_velocity(self.homing_velocity)
+        phase_time2 = self.movement.constant_angular_velocity(self.homing_velocity/5)
 
+        # Start the homing procedure
         while True:
-            # Direction set
+            # Set forward direction
             self.driver.set_direction(direction)
-            print('Part1')
+
+            # Move through all calculated motor delays to accelerate to homing velocity ( Angular Velocity )
             for x in accel_dels:
+                # Make 1 microstep in proper period of time
                 self.driver.move_del(x)
+
+                # If the Endstop sensor detects the trigger during the accelerating procedure, abort.
                 if self.sensor.check_sensor():
                     break
 
-            print("Part 2")
+            # If the Endstop still detects the trigger, start the PHASE 2
             if self.sensor.check_sensor():
-                self.driver.move_steps(200, direction2, accel=0.001)
+                # Go backwards by the set number of homing_steps
+                self.driver.move_steps(self.homing_steps, direction2, accel=self.homing_acceleration)
+
+                # Set forward direction
                 self.driver.set_direction(direction)
+
+                # Move through all calculated motor delays to accelerate to second homing velocity ( Angular Velocity )
                 for x2 in accel_dels2:
+                    # Make 1 microstep in proper period of time
                     self.driver.move_del(x2)
+
+                    # If the Endstop sensor detects the trigger during the accelerating procedure, abort.
                     if self.sensor.check_sensor():
                         break
+                # If the Endstop still detects the trigger, end the homing procedure
                 if self.sensor.check_sensor():
                     break
                 else:
                     while True:
+                        # Move forward with constant second homing velocity until the Endstop is triggered
                         self.driver.move_del(phase_time2)
+
+                        # If the Endstop still detects the trigger, end the homing procedure
                         if self.sensor.check_sensor():
                             break
+                    break
             else:
                 while True:
+                    # Move forward with constant homing velocity until the Endstop is triggered
                     self.driver.move_del(phase_time1)
+
+                    # If the Endstop sensor detects the trigger, stop the motor.
                     if self.sensor.check_sensor():
                         break
+                # If the Endstop still detects the trigger, start the PHASE 2
                 if self.sensor.check_sensor():
-                    self.driver.move_steps(200, direction2, accel=0.001)
+                    # Go backwards by the set number of homing_steps
+                    self.driver.move_steps(self.homing_steps, direction2, accel=self.homing_acceleration)
+
+                    # Set forward direction
                     self.driver.set_direction(direction)
+
+                    # Move through all calculated motor delays to accelerate to second homing velocity ( Angular Velocity )
                     for x2 in accel_dels2:
+                        # Make 1 microstep in proper period of time
                         self.driver.move_del(x2)
+
+                        # If the Endstop sensor detects the trigger during the accelerating procedure, abort.
                         if self.sensor.check_sensor():
                             break
+                    # If the Endstop still detects the trigger, end the homing procedure
                     if self.sensor.check_sensor():
                         break
                     else:
                         while True:
+                            # Move forward with constant second homing velocity until the Endstop is triggered
                             self.driver.move_del(phase_time2)
+
+                            # If the Endstop detects the trigger, end the homing procedure
                             if self.sensor.check_sensor():
                                 break
             break
@@ -222,7 +270,6 @@ class Joint:
                 offset = abs(self.offset)
                 steps = ((offset / self.driver.motor_resolution) / (
                         self.driver.gear_teeth / self.gear_teeth)) * self.driver.driver_resolution
-                print("Steps: ", steps)
                 self.driver.move_steps(int(steps), direction, accel=0.005)
             elif self.offset > 0:
                 self.set_angle(self.offset)

@@ -115,7 +115,6 @@ class TMC2209:
 
         delays2 = [delay/1000000 for delay in delays]
 
-
         GPIO.output(self._DIR, dir)
         for delay in delays2:
             GPIO.output(self._STEP, GPIO.LOW)
@@ -285,18 +284,6 @@ class DM556Driver:
             GPIO.output(self._PUL, GPIO.LOW)
             time.sleep(x)
             GPIO.output(self._PUL, GPIO.HIGH)
-
-    def move_step_old(self, steps, dir, accel=0.01):
-        # print('Got steps:', steps)
-
-        for i in range(steps):
-            if dir == 0:
-                GPIO.output(self._DIR, GPIO.LOW)
-            elif dir == 1:
-                GPIO.output(self._DIR, GPIO.HIGH)
-            GPIO.output(self._PUL, GPIO.HIGH)
-            self.delayMicroseconds(300)
-            GPIO.output(self._PUL, GPIO.LOW)
 
     def delayMicroseconds(self, n):
         time.sleep(n / 1000000)

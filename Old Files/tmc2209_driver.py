@@ -59,7 +59,7 @@ class DM556Driver:
         delays = []
         angle = 1
         accel = accel
-        c0 = 2000 * np.sqrt(2 * angle / accel) * 0.67703
+        c0 = 2000 * math.sqrt(2 * angle / accel) * 0.67703
 
         if steps % 2 == 0:
             loops = int(steps/2)
