@@ -12,34 +12,66 @@ pi = pigpio.pi()
 
 GPIO.setmode(GPIO.BCM)
 
+#=======================================================================================================================
+#=====================================          Waist           ========================================================
+#=======================================================================================================================
+
 waist_driver = TMC2209(en=26, dir=13, step=19, resolution=0.9, gear_teeth=20)
 waist_endstop = EndStop(SIGNAL_PIN=12, type='up')
-waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, min_pos=-1, max_pos=358, gear_teeth=125, offset=60,
-                    homing_direction='ANTICLOCKWISE')
+
+waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='ANTICLOCKWISE')
+waist_joint.set_min_pos(-1)
+waist_joint.set_max_pos(358)
+waist_joint.set_offset(60)
+
+#=======================================================================================================================
+#=====================================          Shoulder           =====================================================
+#=======================================================================================================================
+
 
 shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_resolution=1.8, gear_teeth=20)
 shoulder_driver.set_max_speed(500)
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
-shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, min_pos=0, max_pos=181, offset=17,
-                       homing_direction='CLOCKWISE')
+
+shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, homing_direction='CLOCKWISE')
+shoulder_joint.set_max_pos(181)
+shoulder_joint.set_offset(17)
+
+#=======================================================================================================================
+#=====================================          Elbow           ========================================================
+#=======================================================================================================================
 
 elbow_driver = AN4988Driver(en=18, dir=5, step=7, resolution=0.9, gear_teeth=20)
 elbow_driver.set_max_speed(1000)
 elbow_endstop = EndStop(SIGNAL_PIN=23, type='down')
-elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, min_pos=0, max_pos=70, base_angle=50.3,
-                    homing_direction='CLOCKWISE')
+
+elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, homing_direction='CLOCKWISE')
+elbow_joint.set_max_pos(70)
+elbow_joint.set_base_angle(50.3)
+
+#=======================================================================================================================
+#=====================================          Wrist Roll           ===================================================
+#=======================================================================================================================
 
 wrist_roll_driver = TMC2209(en=21, dir=16, step=20, resolution=1.8, gear_teeth=1)
 wrist_roll_driver.set_max_speed(4000)
 wrist_roll_endstop = EndStop(SIGNAL_PIN=24, type="up")
-wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, min_pos=0, max_pos=270, gear_teeth=1, offset=-22,
-                         homing_direction='CLOCKWISE')
+
+wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='CLOCKWISE')
+wrist_roll_joint.set_max_pos(270)
+wrist_roll_joint.set_offset(-22)
+
+#=======================================================================================================================
+#=====================================          Wrist Pitch            =================================================
+#=======================================================================================================================
 
 wrist_pitch_driver = TMC2209(en=10, dir=9, step=11, resolution=1.8, gear_teeth=20)
 wrist_pitch_driver.set_max_speed(4000)
 wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
-wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, min_pos=0, max_pos=250, gear_teeth=40,
+
+wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
+wrist_pitch_joint.set_max_pos(250)
 
 
 class Servo:
@@ -77,11 +109,11 @@ class Robot:
 
         self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
 
-        self.shoulder.set_angle(self.position_algorithm.r_alfa)
+        self.shoulder.move_by_angle(self.position_algorithm.r_alfa)
         time.sleep(0.5)
-        self.elbow.set_angle(self.position_algorithm.r_beta)
+        self.elbow.move_by_angle(self.position_algorithm.r_beta)
         time.sleep(0.5)
-        self.pitch.set_angle(self.position_algorithm.r_theta)
+        self.pitch.move_by_angle(self.position_algorithm.r_theta)
         time.sleep(0.5)
 
     def home_all_joints(self, waist=True, shoulder=True, elbow=True, roll=True, pitch=True):
@@ -147,15 +179,15 @@ class Robot:
                         self.pitch.home()
                 else:
                     if motor == "waist":
-                        self.waist.set_angle(float(angle))
+                        self.waist.move_by_angle(float(angle))
                     elif motor == "shoulder":
-                        self.shoulder.set_angle(float(angle))
+                        self.shoulder.move_by_angle(float(angle))
                     elif motor == "elbow":
-                        self.elbow.set_angle(float(angle))
+                        self.elbow.move_by_angle(float(angle))
                     elif motor == "roll":
-                        self.roll.set_angle(float(angle))
+                        self.roll.move_by_angle(float(angle))
                     elif motor == "pitch":
-                        self.pitch.set_angle(float(angle))
+                        self.pitch.move_by_angle(float(angle))
                     elif motor == "servo":
                         self.effector.move_servo(float(angle))
             time.sleep(2)
@@ -174,4 +206,3 @@ robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, rol
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
 robot.home_all_joints(waist=True, shoulder=False, elbow=False, roll=False, pitch=False)
 robot.console()
-#robot.position(algorithm)
