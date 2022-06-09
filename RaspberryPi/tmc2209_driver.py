@@ -238,6 +238,14 @@ class DM556Driver:
     def set_max_acceleration(self, acceleration):
         self.max_acceleration = acceleration
 
+    def set_direction(self, direction):
+        GPIO.output(self._DIR, direction)
+
+    def move_del(self, delay):
+        GPIO.output(self._PUL, GPIO.LOW)
+        time.sleep(delay)
+        GPIO.output(self._PUL, GPIO.HIGH)
+
     def _sec_to_milisec(self, seconds):
         return seconds / 1000000
 

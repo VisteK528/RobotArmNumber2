@@ -24,17 +24,21 @@ waist_joint.set_min_pos(-1)
 waist_joint.set_max_pos(358)
 waist_joint.set_offset(60)
 
+waist_joint.set_max_velocity(0.2)
+waist_joint.set_max_acceleration(0.5)
+
 #=======================================================================================================================
 #=====================================          Shoulder           =====================================================
 #=======================================================================================================================
 
 
 shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_resolution=1.8, gear_teeth=20)
-shoulder_driver.set_max_speed(500)
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
 
 shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, homing_direction='CLOCKWISE')
-shoulder_joint.set_max_pos(181)
+shoulder_joint.set_homing_velocity(0.15)
+shoulder_joint.set_max_acceleration(0.05)
+shoulder_joint.set_max_pos(150)
 shoulder_joint.set_offset(17)
 
 #=======================================================================================================================
@@ -54,10 +58,11 @@ elbow_joint.set_base_angle(50.3)
 #=======================================================================================================================
 
 wrist_roll_driver = TMC2209(en=21, dir=16, step=20, resolution=1.8, gear_teeth=1)
-wrist_roll_driver.set_max_speed(4000)
 wrist_roll_endstop = EndStop(SIGNAL_PIN=24, type="up")
 
-wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='CLOCKWISE')
+wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='ANTICLOCKWISE')
+wrist_roll_joint.set_homing_acceleration(0.25)
+wrist_roll_joint.set_homing_velocity(0.5)
 wrist_roll_joint.set_max_pos(270)
 wrist_roll_joint.set_offset(-22)
 
@@ -66,11 +71,15 @@ wrist_roll_joint.set_offset(-22)
 #=======================================================================================================================
 
 wrist_pitch_driver = TMC2209(en=10, dir=9, step=11, resolution=1.8, gear_teeth=20)
-wrist_pitch_driver.set_max_speed(4000)
 wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
 
 wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
+wrist_pitch_joint.set_homing_acceleration(0.2)
+wrist_pitch_joint.set_homing_velocity(0.25)
+wrist_pitch_joint.set_max_acceleration(0.8)
+wrist_pitch_joint.set_max_velocity(1.2)
+wrist_pitch_joint.set_homing_steps(100)
 wrist_pitch_joint.set_max_pos(250)
 
 
@@ -127,7 +136,7 @@ class Robot:
                 counter += 1
             if shoulder:
                 print("Shoulder homing... ", end='')
-                self.shoulder.home(multipicator=3)
+                self.shoulder.home()
                 print("Shoulder homed")
                 counter += 1
             if elbow:
@@ -204,5 +213,5 @@ algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effecto
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=True, shoulder=False, elbow=False, roll=False, pitch=False)
+robot.home_all_joints(waist=False, shoulder=False, elbow=False, roll=False, pitch=True)
 robot.console()

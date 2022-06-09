@@ -242,6 +242,9 @@ class Joint:
         self.movement = Movement(motor_step=self.driver.motor_resolution, driver_microstep=self.driver.driver_resolution,
                                  motor_shaft_gear_teeth=self.driver.gear_teeth, joint_gear_teeth=self.gear_teeth)
 
+    def set_homing_steps(self, homing_steps):
+        self.homing_steps = homing_steps
+
     def set_homing_velocity(self, homing_velocity):
         self.homing_velocity = homing_velocity
 
