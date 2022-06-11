@@ -164,55 +164,6 @@ class Movement:
 
         return delays, time_series, motor_ang_vels, joint_ang_vels, accels, pos
 
-    def calculate_all_variables(self, delays):
-        time_series = []
-        time_sum = 0
-        for delay in delays:
-            time_sum += delay
-            time_series.append(time_sum)
-
-        motor_ang_vels = []
-        for i in range(len(time_series)):
-            if i == 0:
-                d_t = time_series[i]
-            else:
-                d_t = time_series[i] - time_series[i - 1]
-
-            d_pos = self._one_pulse_step
-
-            motor_ang_vel = d_pos / d_t
-
-            motor_ang_vels.append(motor_ang_vel)
-
-        joint_ang_vels = [self.joint_vel_from_motor_vel(x) for x in motor_ang_vels]
-
-        accels = []
-        for i in range(0, len(joint_ang_vels), 2):
-            if i == 0:
-                d_v = joint_ang_vels[i]
-                d_t = time_series[i]
-            else:
-                d_v = joint_ang_vels[i] - joint_ang_vels[i - 1]
-                d_t = time_series[i] - time_series[i - 1]
-
-            acceleration = round(d_v / d_t, 2)
-            accels.append(acceleration)
-            accels.append(acceleration)
-
-        pos = []
-        pos_value = 0
-        for i in range(len(time_series)):
-            try:
-                temporary_pos = (time_series[i + 1] - time_series[i]) * joint_ang_vels[i + 1] + accels[i + 1] * 0.5 * (
-                            time_series[i + 1] - time_series[i]) ** 2
-                pos_value += temporary_pos
-                pos.append(pos_value)
-            except:
-                pos.append(pos[len(pos) - 1])
-                pass
-
-        return delays, time_series, motor_ang_vels, joint_ang_vels, accels, pos
-
 
 class Joint:
     def __init__(self, driver, sensor, gear_teeth, homing_direction="ANTICLOCKWISE"):
@@ -288,10 +239,10 @@ class Joint:
 
                 if self.direction == 'ANTICLOCKWISE':
                     if new_pos >= 0:
-                        direction = 1#GPIO.HIGH  # Anticlockwise
+                        direction = 1  # GPIO.HIGH  # Anticlockwise
 
                     else:
-                        direction = 0#GPIO.LOW  # Clockwise
+                        direction = 0  # GPIO.LOW  # Clockwise
                 else:
                     if new_pos >= 0:
                         direction = GPIO.LOW  # Anticlockwise
