@@ -232,7 +232,6 @@ class Joint:
         self.driver.set_direction(direction)
         for delay in delays:
             self.driver.move_del(delay)
-            yield 1
 
     def move_by_angle(self, pos, generator=False):
         if self.position is not None:
@@ -254,13 +253,7 @@ class Joint:
 
                 new_pos = abs(new_pos)
                 steps = self._degrees_to_steps(new_pos)
-                gen = self._move_by_steps(round(steps), direction, self.max_velocity, self.max_acceleration)
-                for _ in range(len(list(gen))):
-                    if generator:
-                        next(gen)
-                        yield 1
-                    else:
-                        next(gen)
+                self._move_by_steps(round(steps), direction, self.max_velocity, self.max_acceleration)
                 self.position = pos
 
     def home(self):

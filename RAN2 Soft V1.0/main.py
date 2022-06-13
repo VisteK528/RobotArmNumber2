@@ -19,10 +19,10 @@ GPIO.setmode(GPIO.BCM)
 waist_driver = TMC2209(en=26, dir=13, step=19, resolution=0.9, gear_teeth=20)
 waist_endstop = EndStop(SIGNAL_PIN=12, type='up')
 
-waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='ANTICLOCKWISE')
+waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='CLOCKWISE')
 waist_joint.set_min_pos(-1)
 waist_joint.set_max_pos(358)
-waist_joint.set_offset(60)
+waist_joint.set_offset(90)
 
 waist_joint.set_max_velocity(0.2)
 waist_joint.set_max_acceleration(0.5)
@@ -45,11 +45,10 @@ shoulder_joint.set_offset(17)
 #=====================================          Elbow           ========================================================
 #=======================================================================================================================
 
-elbow_driver = AN4988Driver(en=18, dir=5, step=7, resolution=0.9, gear_teeth=20)
-elbow_driver.set_max_speed(1000)
-elbow_endstop = EndStop(SIGNAL_PIN=23, type='down')
+elbow_driver = TMC2209(en=18, dir=5, step=7, resolution=0.9, gear_teeth=20)
+elbow_endstop = EndStop(SIGNAL_PIN=23, type='up')
 
-elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, homing_direction='CLOCKWISE')
+elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, homing_direction='ANTICLOCKWISE')
 elbow_joint.set_max_pos(70)
 elbow_joint.set_base_angle(50.3)
 
@@ -75,11 +74,11 @@ wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
 
 wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
-wrist_pitch_joint.set_homing_acceleration(0.2)
-wrist_pitch_joint.set_homing_velocity(0.25)
+wrist_pitch_joint.set_homing_acceleration(0.4)
+wrist_pitch_joint.set_homing_velocity(0.5)
 wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
-wrist_pitch_joint.set_homing_steps(100)
+wrist_pitch_joint.set_homing_steps(75)
 wrist_pitch_joint.set_max_pos(250)
 
 
@@ -213,5 +212,5 @@ algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effecto
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=False, shoulder=False, elbow=False, roll=False, pitch=True)
+robot.home_all_joints(waist=False, shoulder=False, elbow=True, roll=True, pitch=True)
 robot.console()

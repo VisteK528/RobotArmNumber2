@@ -209,26 +209,15 @@ class Robot:
             self._move_joints_to_the_pos(x, y)
 
     def move_simultaneusly(self):
-        gen1 = self.roll.move_by_angle(180, generator=True)
-        gen2 = self.pitch.move_by_angle(180, generator=True)
+        th1 = th.Thread(target=self.roll.move_by_angle, args=[180,])
+        th2 = th.Thread(target=self.pitch.move_by_angle, args=[180, ])
 
-        length_gen1 = len(list(gen1))
-        length_gen2 = len(list(gen2))
+        th1.start()
+        th2.start()
 
-        if length_gen1 >= length_gen2:
-            for i in range(length_gen1):
-                try:
-                    next(gen2)
-                except:
-                    pass
-                next(gen1)
-        else:
-            for i in range(length_gen2):
-                try:
-                    next(gen1)
-                except:
-                    pass
-                next(gen2)
+        th1.join()
+        th2.join()
+
 
 
 algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=12, base_height=13,
@@ -236,5 +225,5 @@ algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effecto
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=False, shoulder=False, elbow=False, roll=False, pitch=True)
-robot.console()
+robot.home_all_joints(waist=False, shoulder=False, elbow=False, roll=True, pitch=True)
+robot.move_simultaneusly()
