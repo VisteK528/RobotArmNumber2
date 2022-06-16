@@ -295,9 +295,3 @@ class DM556Driver:
 
     def delayMicroseconds(self, n):
         time.sleep(n / 1000000)
-
-
-
-
-
-

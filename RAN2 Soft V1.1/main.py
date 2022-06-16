@@ -1,11 +1,12 @@
-from robot import Joint, EndStop
-from tmc2209_driver import TMC2209, DM556Driver, AN4988Driver
+from Joint import Joint
+from Endstop import EndStop
+from Drivers import TMC2209, DM556Driver, AN4988Driver
+from Servo import Servo
 import RPi.GPIO as GPIO
 import time
 import threading as th
-import socket
 import pigpio
-from pos_algorithm import PositionAlgorithm
+from PositionAlgorithm import PositionAlgorithm
 
 # Pi GPIO initialization
 pi = pigpio.pi()
@@ -81,21 +82,6 @@ wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
 wrist_pitch_joint.set_homing_steps(100)
 wrist_pitch_joint.set_max_pos(250)
-
-
-class Servo:
-    def __init__(self, servo_pin):
-        self._servo_pin = servo_pin
-
-    def degrees_to_miliseconds(self, degrees):
-        value = round((11.111111 * degrees) + 500)
-        return value
-
-    def move_servo(self, position):
-        value = self.degrees_to_miliseconds(position)
-        pi.set_servo_pulsewidth(self._servo_pin, value)
-        time.sleep(0.1)
-
 
 class Robot:
     def __init__(self, waist, shoulder, elbow, roll, pitch, effector, position_algorithm):

@@ -24,5 +24,3 @@ while True:
     angle = int(input("Podaj kąt: "))
     servo.move_servo(2, angle)
     time.sleep(2)
-
-

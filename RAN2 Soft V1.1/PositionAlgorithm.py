@@ -4,6 +4,9 @@ class PositionAlgorithm:
     def __init__(self, shoulder_len, elbow_len, effector_len, base_height, shoulder_joint_offset=0,
                  elbow_joint_offset=0, pitch_joint_offset=0):
         """
+        Robot PositionAlgorithm calculates the position of each joint ( its angle ) in order to place robot arm's
+        effector in the desired position
+
         :param shoulder_len: AB section, |AB| = shoulder_len
         :param elbow_len: BC section, |BC| = elbow_len
         :param effector_len: CD section, |CD| = effector_len
@@ -43,23 +46,39 @@ class PositionAlgorithm:
         self.elbow_joint_offset = elbow_joint_offset
         self.pitch_joint_offset = pitch_joint_offset
 
-    def rad_to_deg(self, angle):
-        return angle*180/math.pi
+    def rad_to_deg(self, radians):
+        """
+        Converts radians to degrees
+        """
+        return radians*180/math.pi
 
-    def deg_to_rad(self, angle):
-        return angle*math.pi/180
+    def deg_to_rad(self, degrees):
+        """
+        Converts degrees to radians
+        """
+        return degrees*math.pi/180
 
     def update_base_robot_angles(self):
+        """
+        Updates alfa, beta and theta values from radians to degrees
+        """
         self.alfa = self.rad_to_deg(self.rad_alfa)
         self.beta = self.rad_to_deg(self.rad_beta)
         self.theta = self.rad_to_deg(self.rad_theta)
 
     def update_robot_adapted_base_robot_angles(self):
+        """
+        Updates the calculated values of alfa, beta and theta by subtracting from them their offsets
+        """
         self.r_alfa = abs(self.alfa-self.shoulder_joint_offset)
         self.r_beta = abs(self.beta-self.elbow_joint_offset)
         self.r_theta = abs(self.theta-self.pitch_joint_offset)
 
     def calc_arm_pos_horizontally(self, x, y):
+        """
+        Calculates values of alfa, beta and theta in order to move robot's effector to preset position (X, Y)
+        and align it horizontally
+        """
 
         new_x = x - self.cd_sect
         new_y = y - self.h
@@ -94,6 +113,10 @@ class PositionAlgorithm:
         return self.alfa, self.beta, self.theta
 
     def calc_arm_pos_vertically(self, x, y):
+        """
+        Calculates values of alfa, beta and theta in order to move robot's effector to preset position (X, Y)
+        and align it vertically
+        """
         new_y = y - self.h
         new_y2 = new_y + self.cd_sect
 
@@ -126,3 +149,13 @@ class PositionAlgorithm:
 
         print(self.a, self.b, self.c, self.d)
         return self.alfa, self.beta, self.theta
+
+    def calc_arm_pos_horizontally_adapted(self, x, y):
+        """
+        Calculates the angles by calling the calc_arm_pos_horizontally method and then updating
+        the robot-adapted values
+        """
+        self.calc_arm_pos_horizontally(x, y)
+        self.update_robot_adapted_base_robot_angles()
+
+        return self.r_alfa, self.r_beta, self.r_theta
