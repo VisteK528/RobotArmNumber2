@@ -159,3 +159,10 @@ class PositionAlgorithm:
         self.update_robot_adapted_base_robot_angles()
 
         return self.r_alfa, self.r_beta, self.r_theta
+
+    def calc_arm_pos_vertically_adapted(self, x, y):
+        self.calc_arm_pos_vertically(x, y)
+        self.update_robot_adapted_base_robot_angles()
+
+        print(self.r_alfa, self.r_beta, self.r_theta)
+        return self.r_alfa, self.r_beta, self.r_theta

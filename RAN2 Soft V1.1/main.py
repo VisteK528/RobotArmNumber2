@@ -5,6 +5,9 @@ from Servo import Servo
 import RPi.GPIO as GPIO
 import time
 import threading as th
+import os
+os.system('sudo pigpiod')
+
 import pigpio
 from PositionAlgorithm import PositionAlgorithm
 
@@ -85,7 +88,7 @@ wrist_pitch_joint.set_max_pos(250)
 
 class Robot:
     def __init__(self, waist, shoulder, elbow, roll, pitch, effector, position_algorithm):
-        #Joints and Effectors
+        # Joints and Effectors
         self.waist = waist
         self.shoulder = shoulder
         self.elbow = elbow
@@ -93,23 +96,31 @@ class Robot:
         self.pitch = pitch
         self.effector = effector
 
-        #Algorithms
+        # Algorithms
         self.position_algorithm = position_algorithm
 
         # Variables
         self._homed = None
 
-    def _move_joints_to_the_pos(self, x, y):
+    def _move_joints_to_the_pos(self, x, y, aligment):
         assert type(x), type(y) == float
 
-        self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
+        if aligment == 'vertical':
+            self.position_algorithm.calc_arm_pos_vertically_adapted(x, y)
+        elif aligment == 'horizontal':
+            self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
 
-        self.shoulder.move_by_angle(self.position_algorithm.r_alfa)
-        time.sleep(0.5)
-        self.elbow.move_by_angle(self.position_algorithm.r_beta)
-        time.sleep(0.5)
-        self.pitch.move_by_angle(self.position_algorithm.r_theta)
-        time.sleep(0.5)
+        th1 = th.Thread(target=self.shoulder.move_by_angle, args=[self.position_algorithm.r_alfa, ])
+        th2 = th.Thread(target=self.elbow.move_by_angle, args=[self.position_algorithm.r_beta, ])
+        th3 = th.Thread(target=self.pitch.move_by_angle, args=[self.position_algorithm.r_theta, ])
+
+        th1.start()
+        th2.start()
+        th3.start()
+
+        th1.join()
+        th2.join()
+        th3.join()
 
     def home_all_joints(self, waist=True, shoulder=True, elbow=True, roll=True, pitch=True):
         counter = 0
@@ -154,10 +165,13 @@ class Robot:
         while True:
             message = input("").lower().split()
 
-            if message[0] == "position":
+            if message[0] == "vposition":
                 x, y = float(message[1]), float(message[2])
+                self._move_joints_to_the_pos(x, y, 'vertical')
 
-                self._move_joints_to_the_pos(x, y)
+            elif message[0] == "hposition":
+                x, y = float(message[1]), float(message[2])
+                self._move_joints_to_the_pos(x, y, 'horizontal')
 
             elif message[0] == "move":
                 motor, angle = message[1], message[2]
@@ -187,29 +201,10 @@ class Robot:
                         self.effector.move_servo(float(angle))
             time.sleep(2)
 
-    def position(self):
-        while True:
-            x, y = input("Podaj koordynaty: ").split()
-            x, y = float(x), float(y)
-
-            self._move_joints_to_the_pos(x, y)
-
-    def move_simultaneusly(self):
-        th1 = th.Thread(target=self.roll.move_by_angle, args=[180,])
-        th2 = th.Thread(target=self.pitch.move_by_angle, args=[180, ])
-
-        th1.start()
-        th2.start()
-
-        th1.join()
-        th2.join()
-
-
-
-algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=12, base_height=13,
+algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=7.835, base_height=15,
                               shoulder_joint_offset=180, elbow_joint_offset=50.3, pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=False, shoulder=False, elbow=False, roll=True, pitch=True)
-robot.move_simultaneusly()
+robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
+robot.console()
