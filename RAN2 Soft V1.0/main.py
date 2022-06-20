@@ -36,7 +36,7 @@ shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_r
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
 
 shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, homing_direction='CLOCKWISE')
-shoulder_joint.set_homing_velocity(0.15)
+shoulder_joint.set_homing_velocity(0.1)
 shoulder_joint.set_max_acceleration(0.05)
 shoulder_joint.set_max_pos(150)
 shoulder_joint.set_offset(17)
@@ -61,9 +61,11 @@ wrist_roll_endstop = EndStop(SIGNAL_PIN=24, type="up")
 
 wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='ANTICLOCKWISE')
 wrist_roll_joint.set_homing_acceleration(0.25)
-wrist_roll_joint.set_homing_velocity(0.5)
+wrist_roll_joint.set_homing_velocity(0.7)
+wrist_roll_joint.set_max_acceleration(0.8)
+wrist_roll_joint.set_max_velocity(1.2)
 wrist_roll_joint.set_max_pos(270)
-wrist_roll_joint.set_offset(-22)
+wrist_roll_joint.set_offset(-21)
 
 #=======================================================================================================================
 #=====================================          Wrist Pitch            =================================================
@@ -75,7 +77,7 @@ wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
 wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
 wrist_pitch_joint.set_homing_acceleration(0.4)
-wrist_pitch_joint.set_homing_velocity(0.5)
+wrist_pitch_joint.set_homing_velocity(0.7)
 wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
 wrist_pitch_joint.set_homing_steps(75)
@@ -116,6 +118,7 @@ class Robot:
         assert type(x), type(y) == float
 
         self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
+
 
         self.shoulder.move_by_angle(self.position_algorithm.r_alfa)
         time.sleep(0.5)
@@ -207,10 +210,10 @@ class Robot:
 
             self._move_joints_to_the_pos(x, y)
 
-algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=12, base_height=13,
+algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=13, base_height=13,
                               shoulder_joint_offset=180, elbow_joint_offset=50.3, pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=False, shoulder=False, elbow=True, roll=True, pitch=True)
+robot.home_all_joints(waist=True, shoulder=True, elbow=True, roll=True, pitch=True)
 robot.console()

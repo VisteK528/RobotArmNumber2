@@ -36,24 +36,23 @@ waist_joint.set_max_acceleration(0.5)
 #=======================================================================================================================
 
 
-shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_resolution=1.8, gear_teeth=20)
+shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=8, motor_resolution=1.8, gear_teeth=20)
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
 
 shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, homing_direction='CLOCKWISE')
-shoulder_joint.set_homing_velocity(0.15)
+shoulder_joint.set_homing_velocity(0.12)
 shoulder_joint.set_max_acceleration(0.05)
-shoulder_joint.set_max_pos(150)
-shoulder_joint.set_offset(17)
+shoulder_joint.set_max_pos(171)
+shoulder_joint.set_offset(15)
 
 #=======================================================================================================================
 #=====================================          Elbow           ========================================================
 #=======================================================================================================================
 
-elbow_driver = AN4988Driver(en=18, dir=5, step=7, resolution=0.9, gear_teeth=20)
-elbow_driver.set_max_speed(1000)
-elbow_endstop = EndStop(SIGNAL_PIN=23, type='down')
+elbow_driver = TMC2209(en=18, dir=5, step=7, resolution=0.9, gear_teeth=20)
+elbow_endstop = EndStop(SIGNAL_PIN=23, type='up')
 
-elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, homing_direction='CLOCKWISE')
+elbow_joint = Joint(driver=elbow_driver, sensor=elbow_endstop, gear_teeth=62, homing_direction='ANTICLOCKWISE')
 elbow_joint.set_max_pos(70)
 elbow_joint.set_base_angle(50.3)
 
@@ -67,6 +66,8 @@ wrist_roll_endstop = EndStop(SIGNAL_PIN=24, type="up")
 wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='ANTICLOCKWISE')
 wrist_roll_joint.set_homing_acceleration(0.25)
 wrist_roll_joint.set_homing_velocity(0.5)
+wrist_roll_joint.set_homing_steps(100)
+
 wrist_roll_joint.set_max_pos(270)
 wrist_roll_joint.set_offset(-22)
 
@@ -80,10 +81,11 @@ wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
 wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
 wrist_pitch_joint.set_homing_acceleration(0.2)
-wrist_pitch_joint.set_homing_velocity(0.25)
+wrist_pitch_joint.set_homing_velocity(0.4)
+wrist_pitch_joint.set_homing_steps(100)
+
 wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
-wrist_pitch_joint.set_homing_steps(100)
 wrist_pitch_joint.set_max_pos(250)
 
 class Robot:
