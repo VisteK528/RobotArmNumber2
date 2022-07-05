@@ -85,7 +85,7 @@ class PositionAlgorithm:
         position ( X point of coordinates (x, y, z) ) in 3D space and then align it horizontally or vertically depending
         on user's choice
         """
-        self.omega = math.atan(y/x)
+        self.omega = self.rad_to_deg(math.atan2(y,x))
         distance = math.sqrt(pow(x, 2)+pow(y, 2))
 
         if align == "horizontal":
