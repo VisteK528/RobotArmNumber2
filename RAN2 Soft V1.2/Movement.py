@@ -1,5 +1,4 @@
 import math
-import matplotlib.pyplot as plt
 
 class Movement:
     def __init__(self, motor_step, driver_microstep, motor_shaft_gear_teeth, joint_gear_teeth):
@@ -45,7 +44,7 @@ class Movement:
         motor_ang_vel = joint_ang_vel/self._speed_gear_ratio
         return motor_ang_vel
 
-    def new_move_steps(self, steps, max_speed, accel):
+    def move_steps(self, steps, max_speed, accel):
         max_speed = self.motor_vel_from_joint_vel(max_speed)
         max_speed_delay = self._sec_to_milisec(self._one_pulse_step/max_speed)
         delays = []
@@ -163,38 +162,3 @@ class Movement:
                 pass
 
         return delays, time_series, motor_ang_vels, joint_ang_vels, accels, pos
-
-
-
-mov = Movement(motor_step=0.9, driver_microstep=8, motor_shaft_gear_teeth=20, joint_gear_teeth=125)
-
-
-desired_speed = 0.5
-
-
-dels = mov.accelerate_to_velocity(joint_ang_vel=desired_speed)
-
-dels2 = [mov.phase_time(desired_speed) for _ in range(200)]
-dels3 = mov.accelerate_to_velocity(desired_speed, accel=0.5, reverse=True)
-
-dels += dels2
-dels += dels3
-
-
-
-"""dels = mov.accelerate_to_velocity(joint_angular_velocity=desired_speed)
-dels2 = [mov.constant_angular_velocity(desired_speed) for _ in range(200)]
-dels3 = mov.accelerate_to_velocity(joint_angular_velocity=desired_speed, accel=0.2, reverse=True)
-
-dels += dels2
-dels += dels3"""
-
-
-_, times, _, velocitys, accels, pos = mov.calculate_all_variables(dels)
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.plot(times, velocitys)
-ax.plot(times, accels)
-ax.plot(times, pos)
-#ax.set_ylim(ymin=0, ymax=1)
-plt.show()

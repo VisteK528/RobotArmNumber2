@@ -1,11 +1,15 @@
-from robot import Joint, EndStop
-from tmc2209_driver import TMC2209, DM556Driver, AN4988Driver
+from Joint import Joint
+from Endstop import EndStop
+from Drivers import TMC2209, DM556Driver, AN4988Driver
+from Servo import Servo
 import RPi.GPIO as GPIO
 import time
 import threading as th
-import socket
+import os
+os.system('sudo pigpiod')
+
 import pigpio
-from pos_algorithm import PositionAlgorithm
+from PositionAlgorithm import PositionAlgorithm
 
 # Pi GPIO initialization
 pi = pigpio.pi()
@@ -19,10 +23,10 @@ GPIO.setmode(GPIO.BCM)
 waist_driver = TMC2209(en=26, dir=13, step=19, resolution=0.9, gear_teeth=20)
 waist_endstop = EndStop(SIGNAL_PIN=12, type='up')
 
-waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='CLOCKWISE')
+waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='ANTICLOCKWISE')
 waist_joint.set_min_pos(-1)
 waist_joint.set_max_pos(358)
-waist_joint.set_offset(90)
+waist_joint.set_offset(60)
 
 waist_joint.set_max_velocity(0.2)
 waist_joint.set_max_acceleration(0.5)
@@ -32,14 +36,14 @@ waist_joint.set_max_acceleration(0.5)
 #=======================================================================================================================
 
 
-shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=46.6667, motor_resolution=1.8, gear_teeth=20)
+shoulder_driver = DM556Driver(DIR=15, PUL=14, driver_resolution=8, motor_resolution=1.8, gear_teeth=20)
 shoulder_endstop = EndStop(SIGNAL_PIN=6, type='up')
 
 shoulder_joint = Joint(shoulder_driver, shoulder_endstop, gear_teeth=149, homing_direction='CLOCKWISE')
-shoulder_joint.set_homing_velocity(0.1)
+shoulder_joint.set_homing_velocity(0.12)
 shoulder_joint.set_max_acceleration(0.05)
-shoulder_joint.set_max_pos(150)
-shoulder_joint.set_offset(17)
+shoulder_joint.set_max_pos(171)
+shoulder_joint.set_offset(15)
 
 #=======================================================================================================================
 #=====================================          Elbow           ========================================================
@@ -61,11 +65,11 @@ wrist_roll_endstop = EndStop(SIGNAL_PIN=24, type="up")
 
 wrist_roll_joint = Joint(driver=wrist_roll_driver, sensor=wrist_roll_endstop, gear_teeth=1, homing_direction='ANTICLOCKWISE')
 wrist_roll_joint.set_homing_acceleration(0.25)
-wrist_roll_joint.set_homing_velocity(0.7)
-wrist_roll_joint.set_max_acceleration(0.8)
-wrist_roll_joint.set_max_velocity(1.2)
+wrist_roll_joint.set_homing_velocity(0.5)
+wrist_roll_joint.set_homing_steps(100)
+
 wrist_roll_joint.set_max_pos(270)
-wrist_roll_joint.set_offset(-21)
+wrist_roll_joint.set_offset(-22)
 
 #=======================================================================================================================
 #=====================================          Wrist Pitch            =================================================
@@ -76,31 +80,17 @@ wrist_pitch_endstop = EndStop(SIGNAL_PIN=25, type='up')
 
 wrist_pitch_joint = Joint(driver=wrist_pitch_driver, sensor=wrist_pitch_endstop, gear_teeth=40,
                           homing_direction="ANTICLOCKWISE")
-wrist_pitch_joint.set_homing_acceleration(0.4)
-wrist_pitch_joint.set_homing_velocity(0.7)
+wrist_pitch_joint.set_homing_acceleration(0.2)
+wrist_pitch_joint.set_homing_velocity(0.4)
+wrist_pitch_joint.set_homing_steps(100)
+
 wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
-wrist_pitch_joint.set_homing_steps(75)
 wrist_pitch_joint.set_max_pos(250)
-
-
-class Servo:
-    def __init__(self, servo_pin):
-        self._servo_pin = servo_pin
-
-    def degrees_to_miliseconds(self, degrees):
-        value = round((11.111111 * degrees) + 500)
-        return value
-
-    def move_servo(self, position):
-        value = self.degrees_to_miliseconds(position)
-        pi.set_servo_pulsewidth(self._servo_pin, value)
-        time.sleep(0.1)
-
 
 class Robot:
     def __init__(self, waist, shoulder, elbow, roll, pitch, effector, position_algorithm):
-        #Joints and Effectors
+        # Joints and Effectors
         self.waist = waist
         self.shoulder = shoulder
         self.elbow = elbow
@@ -108,24 +98,31 @@ class Robot:
         self.pitch = pitch
         self.effector = effector
 
-        #Algorithms
+        # Algorithms
         self.position_algorithm = position_algorithm
 
         # Variables
         self._homed = None
 
-    def _move_joints_to_the_pos(self, x, y):
+    def _move_joints_to_the_pos(self, x, y, z, aligment):
         assert type(x), type(y) == float
 
-        self.position_algorithm.calc_arm_pos_horizontally_adapted(x, y)
+        self.position_algorithm.calc_arm_pos(x, y, z, aligment)
 
+        th4 = th.Thread(target=self.waist.move_by_angle, args=[self.position_algorithm.r_omega])
+        th1 = th.Thread(target=self.shoulder.move_by_angle, args=[self.position_algorithm.r_alfa, ])
+        th2 = th.Thread(target=self.elbow.move_by_angle, args=[self.position_algorithm.r_beta, ])
+        th3 = th.Thread(target=self.pitch.move_by_angle, args=[self.position_algorithm.r_theta, ])
 
-        self.shoulder.move_by_angle(self.position_algorithm.r_alfa)
-        time.sleep(0.5)
-        self.elbow.move_by_angle(self.position_algorithm.r_beta)
-        time.sleep(0.5)
-        self.pitch.move_by_angle(self.position_algorithm.r_theta)
-        time.sleep(0.5)
+        th4.start()
+        th1.start()
+        th2.start()
+        th3.start()
+
+        th4.joint()
+        th1.join()
+        th2.join()
+        th3.join()
 
     def home_all_joints(self, waist=True, shoulder=True, elbow=True, roll=True, pitch=True):
         counter = 0
@@ -170,10 +167,13 @@ class Robot:
         while True:
             message = input("").lower().split()
 
-            if message[0] == "position":
-                x, y = float(message[1]), float(message[2])
+            if message[0] == "vposition":
+                x, y, z = float(message[1]), float(message[2]), float(message[3])
+                self._move_joints_to_the_pos(x, y, z, 'vertical')
 
-                self._move_joints_to_the_pos(x, y)
+            elif message[0] == "hposition":
+                x, y, z = float(message[1]), float(message[2]), float(message[3])
+                self._move_joints_to_the_pos(x, y, z, 'horizontal')
 
             elif message[0] == "move":
                 motor, angle = message[1], message[2]
@@ -203,17 +203,10 @@ class Robot:
                         self.effector.move_servo(float(angle))
             time.sleep(2)
 
-    def position(self):
-        while True:
-            x, y = input("Podaj koordynaty: ").split()
-            x, y = float(x), float(y)
-
-            self._move_joints_to_the_pos(x, y)
-
-algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=13, base_height=13,
+algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=7.835, base_height=15,
                               shoulder_joint_offset=180, elbow_joint_offset=50.3, pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=True, shoulder=True, elbow=True, roll=True, pitch=True)
+robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
 robot.console()
