@@ -119,7 +119,7 @@ class Robot:
         th2.start()
         th3.start()
 
-        th4.joint()
+        th4.join()
         th1.join()
         th2.join()
         th3.join()
@@ -204,7 +204,8 @@ class Robot:
             time.sleep(2)
 
 algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=7.835, base_height=15,
-                              shoulder_joint_offset=180, elbow_joint_offset=50.3, pitch_joint_offset=-111)
+                              waist_joint_offset=60, shoulder_joint_offset=180, elbow_joint_offset=50.3,
+                              pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
