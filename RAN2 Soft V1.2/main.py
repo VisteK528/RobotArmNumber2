@@ -6,6 +6,7 @@ import RPi.GPIO as GPIO
 import time
 import threading as th
 import os
+from Connections import Socket, Server
 os.system('sudo pigpiod')
 
 import pigpio
@@ -26,7 +27,6 @@ waist_endstop = EndStop(SIGNAL_PIN=12, type='up')
 waist_joint = Joint(driver=waist_driver, sensor=waist_endstop, gear_teeth=125, homing_direction='CLOCKWISE')
 waist_joint.set_min_pos(-1)
 waist_joint.set_max_pos(358)
-waist_joint.set_offset(0)
 
 waist_joint.set_max_velocity(0.2)
 waist_joint.set_max_acceleration(0.5)
@@ -108,7 +108,7 @@ class Robot:
         assert type(x), type(y) == float
 
         self.position_algorithm.calc_arm_pos(x, y, z, aligment)
-        print(self.position_algorithm.r_omega)
+
         th4 = th.Thread(target=self.waist.move_by_angle, args=[self.position_algorithm.r_omega])
         th1 = th.Thread(target=self.shoulder.move_by_angle, args=[self.position_algorithm.r_alfa, ])
         th2 = th.Thread(target=self.elbow.move_by_angle, args=[self.position_algorithm.r_beta, ])
@@ -163,6 +163,21 @@ class Robot:
         except Exception as e:
             print(f"Homing failed due to error: {e}")
 
+    def _remote_control(self):
+        self.server = Server(HEADER=64, FORMAT='utf-8')
+        conn, addr = self.server.start_host()
+
+        while self.server.connected:
+            msg_length = conn.recv(self.server.HEADER).decode(self.server.FORMAT)
+            if msg_length:
+                msg_length = int(msg_length)
+                msg = conn.recv(msg_length).decode(self.server.FORMAT)
+                if msg == self.server.DISCONNECT_MESSAGE:
+                    self.server.connected = False
+                print(msg)
+            conn.send("Msg received".encode(self.server.FORMAT))
+        conn.close()
+
     def console(self):
         while True:
             message = input("").lower().split()
@@ -174,6 +189,9 @@ class Robot:
             elif message[0] == "hposition":
                 x, y, z = float(message[1]), float(message[2]), float(message[3])
                 self._move_joints_to_the_pos(x, y, z, 'horizontal')
+
+            elif message[0] == 'remote':
+                self._remote_control()
 
             elif message[0] == "move":
                 motor, angle = message[1], message[2]
@@ -209,5 +227,5 @@ algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effecto
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=True, shoulder=True, elbow=True, roll=True, pitch=True)
+robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
 robot.console()

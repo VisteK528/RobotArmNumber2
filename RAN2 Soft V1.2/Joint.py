@@ -30,9 +30,19 @@ class Joint:
                                  motor_shaft_gear_teeth=self.driver.gear_teeth, joint_gear_teeth=self.gear_teeth)
 
     def set_homing_steps(self, homing_steps):
+        """
+        Sets the value of steps joint has to do during the second phase of the homing procedure
+        :param homing_steps: -> int
+        :return: -> None
+        """
         self.homing_steps = homing_steps
 
     def set_homing_velocity(self, homing_velocity):
+        """
+        Sets joint's angular velocity during the homing procedure
+        :param homing_velocity: -> float
+        :return: -> None
+        """
         self.homing_velocity = homing_velocity
 
     def set_homing_acceleration(self, homing_acceleration):
