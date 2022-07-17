@@ -19,7 +19,7 @@ class RemoteControl:
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
         self.selected_joint = 1
-        self.j = [0 for _ in range(6)]
+        self.j = [0 for _ in range(5)]
 
         self._free_mode = False
         self.axis = Axis()
@@ -124,7 +124,7 @@ class RemoteControl:
     def _display_free_control_data(self):
         message = ""
         for i, x in enumerate(self.j, 1):
-            message += f"Joint {i}: {x}"
+            message += f"Joint {i}: {x} "
         message += f"\tGripper: {self.gripper_pos}"
         print(message)
 

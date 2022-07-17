@@ -89,7 +89,7 @@ class PositionAlgorithm:
         on user's choice
         :returns: -> r_alfa (float), r_beta (float), r_theta (float), r_omega(float)
         """
-        self.omega = math.atan2(y, x)
+        self.omega = self.rad_to_deg(math.atan2(y, x))
         distance = math.sqrt(pow(x, 2)+pow(y, 2))
 
         if align == "horizontal":

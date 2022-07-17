@@ -31,12 +31,11 @@ class Transmitter(Client):
             elif msg == 2:
                 print("Xbox Controller Input activated!")
                 while True:
-                    time.sleep(0.1)
                     free_mode = self.xbox_controler.control()
 
                     if free_mode is not None:
                         if free_mode:
-                            message = "TRUE"
+                            message = "True"
                             for joint in self.xbox_controler.j:
                                 message += ";"
                                 message += str(joint)
@@ -44,7 +43,7 @@ class Transmitter(Client):
                             print(response)
 
                         elif not free_mode:
-                            message = f"FALSE;{self.xbox_controler.axis.x};{self.xbox_controler.axis.y}" \
+                            message = f"False;{self.xbox_controler.axis.x};{self.xbox_controler.axis.y}" \
                                       f";{self.xbox_controler.axis.z}"
                             response = self._send_command(message)
                             print(response)

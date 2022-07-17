@@ -100,7 +100,7 @@ class Robot:
         self.effector = effector
 
         #Positions
-        self.positions = [self.waist.position, self.shoulder.positon, self.elbow.position,
+        self.positions = [self.waist.position, self.shoulder.position, self.elbow.position,
                           self.roll.position, self.pitch.position]
         # Algorithms
         self.position_algorithm = position_algorithm
