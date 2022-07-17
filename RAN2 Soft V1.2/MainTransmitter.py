@@ -21,6 +21,7 @@ class Transmitter(Client):
             msg = int(input("Please select type of control:\n1)Console Input\n2)Xbox Controller Input\n"
                             "3)Quit\nYour choice: "))
             if msg == 1:
+                print("Console Input Mode activated!")
                 while True:
                     message = input("Please type your message or type 'Quit' to leave console input: ")
                     if message.lower() == 'quit':
@@ -28,6 +29,7 @@ class Transmitter(Client):
                     response = self._send_command(message)
                     print(response)
             elif msg == 2:
+                print("Xbox Controller Input activated!")
                 while True:
                     time.sleep(0.1)
                     free_mode = self.xbox_controler.control()
@@ -51,6 +53,7 @@ class Transmitter(Client):
                 break
             else:
                 print("Invalid choice!")
+            print()
 
         self.conn.close()
 

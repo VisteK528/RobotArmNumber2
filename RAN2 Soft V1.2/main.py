@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 import time
 import threading as th
 import os
-from Connections import Socket, Server
+from Connections import Server
 os.system('sudo pigpiod')
 
 import pigpio
@@ -88,6 +88,7 @@ wrist_pitch_joint.set_max_acceleration(0.8)
 wrist_pitch_joint.set_max_velocity(1.2)
 wrist_pitch_joint.set_max_pos(250)
 
+
 class Robot:
     def __init__(self, waist, shoulder, elbow, roll, pitch, effector, position_algorithm):
         # Joints and Effectors
@@ -98,31 +99,43 @@ class Robot:
         self.pitch = pitch
         self.effector = effector
 
+        #Positions
+        self.positions = [self.waist.position, self.shoulder.positon, self.elbow.position,
+                          self.roll.position, self.pitch.position]
         # Algorithms
         self.position_algorithm = position_algorithm
 
         # Variables
         self._homed = None
 
-    def _move_joints_to_the_pos(self, x, y, z, aligment):
+    def _move_all_joints_to_the_pos(self, joint_values):
+        for i, joint_value in enumerate(joint_values):
+            if joint_value is None:
+                joint_values[i] = self.positions[i]
+
+        threads = [th.Thread(target=self.waist.move_by_angle, args=[joint_values[0]]),
+                   th.Thread(target=self.shoulder.move_by_angle, args=[joint_values[1]]),
+                   th.Thread(target=self.elbow.move_by_angle, args=[joint_values[2]]),
+                   th.Thread(target=self.roll.move_by_angle, args=[joint_values[3]]),
+                   th.Thread(target=self.pitch.move_by_angle, args=[joint_values[4]])]
+
+        #Start all threads
+        for thread in threads:
+            thread.start()
+
+        #Join all threads
+        for thread in threads:
+            thread.join()
+
+    def _move_joints_to_the_pos(self, x: float, y: float, z: float, alignment: str):
         assert type(x), type(y) == float
 
-        self.position_algorithm.calc_arm_pos(x, y, z, aligment)
+        self.position_algorithm.calc_arm_pos(x, y, z, alignment)
 
-        th4 = th.Thread(target=self.waist.move_by_angle, args=[self.position_algorithm.r_omega])
-        th1 = th.Thread(target=self.shoulder.move_by_angle, args=[self.position_algorithm.r_alfa, ])
-        th2 = th.Thread(target=self.elbow.move_by_angle, args=[self.position_algorithm.r_beta, ])
-        th3 = th.Thread(target=self.pitch.move_by_angle, args=[self.position_algorithm.r_theta, ])
+        joint_values = [self.position_algorithm.r_omega, self.position_algorithm.r_alfa,
+                        self.position_algorithm.r_beta, None, self.position_algorithm.r_theta]
 
-        th4.start()
-        th1.start()
-        th2.start()
-        th3.start()
-
-        th4.join()
-        th1.join()
-        th2.join()
-        th3.join()
+        self._move_all_joints_to_the_pos(joint_values)
 
     def home_all_joints(self, waist=True, shoulder=True, elbow=True, roll=True, pitch=True):
         counter = 0
@@ -168,14 +181,21 @@ class Robot:
         conn, addr = self.server.start_host()
 
         while self.server.connected:
-            msg_length = conn.recv(self.server.HEADER).decode(self.server.FORMAT)
-            if msg_length:
-                msg_length = int(msg_length)
-                msg = conn.recv(msg_length).decode(self.server.FORMAT)
-                if msg == self.server.DISCONNECT_MESSAGE:
-                    self.server.connected = False
-                print(msg)
-            conn.send("Msg received".encode(self.server.FORMAT))
+            msg = self.server.recv_msg(conn).decode(self.server.FORMAT)
+            if msg == self.server.DISCONNECT_MESSAGE:
+                self.server.connected = False
+            else:
+                data = msg.split(";")
+                free_mode = data.pop(0)
+
+                if free_mode:
+                    joint_values = [float(value) for value in data]
+                    self._move_all_joints_to_the_pos(joint_values)
+
+                elif not free_mode:
+                    self._move_joints_to_the_pos(float(data[0]), float(data[1]), float(data[2]), alignment='horizontal')
+
+            self.server.send_msg(conn, "Message Received")
         conn.close()
 
     def console(self):
@@ -221,11 +241,12 @@ class Robot:
                         self.effector.move_servo(float(angle))
             time.sleep(2)
 
+
 algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=7.835, base_height=15,
                               waist_joint_offset=0, shoulder_joint_offset=180, elbow_joint_offset=50.3,
                               pitch_joint_offset=-111)
 servo = Servo(servo_pin=2)
 robot = Robot(waist=waist_joint, shoulder=shoulder_joint, elbow=elbow_joint, roll=wrist_roll_joint,
               pitch=wrist_pitch_joint, effector=servo, position_algorithm=algorithm)
-robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
+#robot.home_all_joints(waist=False, shoulder=True, elbow=True, roll=True, pitch=True)
 robot.console()

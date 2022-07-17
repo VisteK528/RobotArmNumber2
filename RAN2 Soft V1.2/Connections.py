@@ -38,20 +38,20 @@ class Server(HandleConnection):
     def __init__(self, HEADER, FORMAT):
         super().__init__(HEADER=HEADER, FORMAT=FORMAT)
         print("[STARTING] Server is starting...")
-
+        PORT = 5560
+        self.SERVER = socket.gethostbyname(socket.gethostname())
+        self.ADDR = ('192.168.0.107', PORT)
         self.DISCONNECT_MESSAGE = "!DISCONNECT"
 
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.IP = self.server.getsockname()
-        self.PORT = 5560
-        self.ADDR =(self.IP, self.PORT)
-
-        self.server.bind(self.ADDR)
         self.connected = False
 
     def start_host(self):
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind(self.ADDR)
+
         self.server.listen(1)
         print(f"[LISTENING] Server is listening on {self.ADDR}")
         conn, addr = self.server.accept()
+        self.connected = True
         return conn, addr
 

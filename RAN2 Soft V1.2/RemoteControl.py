@@ -121,6 +121,13 @@ class RemoteControl:
             self.gripper_pos -= scaled_gripper_minus_axis
             time.sleep(self._gripper_change_delay)
 
+    def _display_free_control_data(self):
+        message = ""
+        for i, x in enumerate(self.j, 1):
+            message += f"Joint {i}: {x}"
+        message += f"\tGripper: {self.gripper_pos}"
+        print(message)
+
     def free_control(self):
         """
         Selects joint to be updated and updates it if the user decides so.
@@ -130,6 +137,10 @@ class RemoteControl:
         self._select_joint()
         self._update_positions()
         self._get_gripper_data()
+        self._display_free_control_data()
+
+    def _display_position_control_data(self):
+        print(f"X: {self.axis.x}\tY: {self.axis.y}\tZ: {self.axis.z}\tGripper: {self.gripper_pos}")
 
     def position_control(self):
         """
@@ -170,6 +181,7 @@ class RemoteControl:
 
         self._get_gripper_data()
         self._round_data(ndigits=2)
+        self._display_position_control_data()
 
     def save_and_apply_changes(self):
         pass
@@ -182,9 +194,11 @@ class RemoteControl:
         """
         pygame.event.pump()
         if self.joystick.get_button(2):
+            print("Free mode disabled")
             self._free_mode = False
 
         elif self.joystick.get_button(3):
+            print("Free mode enabled")
             self._free_mode = True
 
         if self._free_mode:
