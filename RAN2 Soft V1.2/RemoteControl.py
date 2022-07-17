@@ -1,5 +1,6 @@
 import pygame
 import time
+
 pygame.init()
 
 
@@ -7,6 +8,7 @@ class RemoteControl:
     """
     Controlling the Robot Arm via connected Xbox Controller
     """
+
     def __init__(self):
         class Axis:
             def __init__(self):
@@ -22,20 +24,20 @@ class RemoteControl:
         self._free_mode = False
         self.axis = Axis()
 
-        #Gripper Control
+        # Gripper Control
         self.gripper_pos = 150
         self._gripper_change_unit = 1.5
         self._gripper_change_delay = 0.025
 
-        #Positon Control
+        # Positon Control
         self._position_change_unit = 0.1
         self._position_change_delay = 0.025
 
-        #Free Control
+        # Free Control
         self._free_change_unit = 0.5
         self._free_change_delay = 0.025
 
-        #Maximum Position
+        # Maximum Position
         self._max_pos = 40
 
     def check_apply_button(self):
@@ -140,11 +142,11 @@ class RemoteControl:
         z_axis = self.joystick.get_hat(0)
 
         # X Axis
-        if x_axis > 0.8 and abs(self.axis.x+self._position_change_unit) <= self._max_pos:
+        if x_axis > 0.8 and abs(self.axis.x + self._position_change_unit) <= self._max_pos:
             self.axis.x += self._position_change_unit
             time.sleep(self._position_change_delay)
 
-        elif x_axis < -0.8 and abs(self.axis.x-self._position_change_unit) <= self._max_pos:
+        elif x_axis < -0.8 and abs(self.axis.x - self._position_change_unit) <= self._max_pos:
             self.axis.x -= self._position_change_unit
             time.sleep(self._position_change_delay)
 
@@ -191,4 +193,9 @@ class RemoteControl:
             self.position_control()
 
         if self.check_apply_button():
-            self.save_and_apply_changes()
+            if self._free_mode:
+                return self._free_mode
+            else:
+                return self._free_mode
+
+        return None
