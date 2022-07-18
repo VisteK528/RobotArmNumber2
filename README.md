@@ -1,13 +1,13 @@
 # RAN2 Software
 
-##Table of contents
+## Table of contents
 * [General info](#General-Info)
 * [Python Libraries](#Pyhon-Libraries)
 * [Status](#Status)
 
-##General info
+## General info
 
-##Python Libraries
+## Python Libraries
 Python libraries used in the project:
 * pygame
 * threading
@@ -18,5 +18,5 @@ Python libraries used in the project:
 * math
 
 
-##Status
+## Status
 The project is still under development
