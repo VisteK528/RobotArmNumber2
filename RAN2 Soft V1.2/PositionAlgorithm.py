@@ -1,6 +1,8 @@
 import math
+from HelperClasses import Conversions
 
-class PositionAlgorithm:
+
+class PositionAlgorithm(Conversions):
     def __init__(self, shoulder_len, elbow_len, effector_len, base_height, waist_joint_offset=0,
                  shoulder_joint_offset=0, elbow_joint_offset=0, pitch_joint_offset=0):
         """
@@ -49,47 +51,33 @@ class PositionAlgorithm:
         self.elbow_joint_offset = elbow_joint_offset
         self.pitch_joint_offset = pitch_joint_offset
 
-    def rad_to_deg(self, radians):
-        """
-        Converts radians to degrees
-        :return: -> float
-        """
-        return radians*180/math.pi
-
-    def deg_to_rad(self, degrees):
-        """
-        Converts degrees to radians
-        :returns: -> float
-        """
-        return degrees*math.pi/180
-
     def update_base_robot_angles(self):
         """
         Updates alfa, beta and theta values from radians to degrees
-        :returns: -> None
+        :return: -> None
         """
-        self.alfa = self.rad_to_deg(self.rad_alfa)
-        self.beta = self.rad_to_deg(self.rad_beta)
-        self.theta = self.rad_to_deg(self.rad_theta)
+        self.alfa = self._rad_to_deg(self.rad_alfa)
+        self.beta = self._rad_to_deg(self.rad_beta)
+        self.theta = self._rad_to_deg(self.rad_theta)
 
     def update_robot_adapted_base_robot_angles(self):
         """
         Updates the calculated values of alfa, beta and theta by subtracting from them their offsets
-        :returns: -> None
+        :return: -> None
         """
         self.r_alfa = abs(self.alfa-self.shoulder_joint_offset)
         self.r_beta = abs(self.beta-self.elbow_joint_offset)
         self.r_theta = abs(self.theta-self.pitch_joint_offset)
         self.r_omega = abs(self.omega-self.waist_joint_offset)
 
-    def calc_arm_pos(self, x, y, z, align='horizontal'):
+    def calc_arm_pos(self, x: float, y: float, z: float, align='horizontal'):
         """
         Calculates the values of alfa, beta, theta and omega values in order to move robot's effector to desired
         position ( X point of coordinates (x, y, z) ) in 3D space and then align it horizontally or vertically depending
         on user's choice
-        :returns: -> r_alfa (float), r_beta (float), r_theta (float), r_omega(float)
+        :return: -> r_alfa (float), r_beta (float), r_theta (float), r_omega(float)
         """
-        self.omega = self.rad_to_deg(math.atan2(y, x))
+        self.omega = self._rad_to_deg(math.atan2(y, x))
         distance = math.sqrt(pow(x, 2)+pow(y, 2))
 
         if align == "horizontal":
@@ -99,11 +87,11 @@ class PositionAlgorithm:
 
         return self.r_alfa, self.r_beta, self.r_theta, self.r_omega
 
-    def calc_arm_pos_horizontally(self, x, y):
+    def calc_arm_pos_horizontally(self, x: float, y: float):
         """
         Calculates values of alfa, beta and theta in order to move robot's effector to preset position (X, Y)
         and align it horizontally
-        :returns: -> alfa (float), beta (float), theta (float)
+        :return: -> alfa (float), beta (float), theta (float)
         """
 
         new_x = x - self.cd_sect
@@ -138,11 +126,11 @@ class PositionAlgorithm:
         #print(self.a, self.b, self.c, self.d)
         return self.alfa, self.beta, self.theta
 
-    def calc_arm_pos_vertically(self, x, y):
+    def calc_arm_pos_vertically(self, x: float, y: float):
         """
         Calculates values of alfa, beta and theta in order to move robot's effector to preset position (X, Y)
         and align it vertically
-        :returns: -> alfa (float), beta (float), theta (float)
+        :return: -> alfa (float), beta (float), theta (float)
         """
         new_y = y - self.h
         new_y2 = new_y + self.cd_sect
@@ -176,22 +164,22 @@ class PositionAlgorithm:
 
         return self.alfa, self.beta, self.theta
 
-    def calc_arm_pos_horizontally_adapted(self, x, y):
+    def calc_arm_pos_horizontally_adapted(self, x: float, y: float):
         """
         Calculates the angles by calling the calc_arm_pos_horizontally method and then updating
         the robot-adapted values
-        :returns: -> r_alfa (float), r_beta (float), r_theta (float)
+        :return: -> r_alfa (float), r_beta (float), r_theta (float)
         """
         self.calc_arm_pos_horizontally(x, y)
         self.update_robot_adapted_base_robot_angles()
 
         return self.r_alfa, self.r_beta, self.r_theta
 
-    def calc_arm_pos_vertically_adapted(self, x, y):
+    def calc_arm_pos_vertically_adapted(self, x: float, y: float):
         """
         Calculates the angles by calling the calc_arm_pos_vertically method and then updating
         the robot-adapted values
-        :returns: -> r_alfa (float), r_beta (float), r_theta (float)
+        :return: -> r_alfa (float), r_beta (float), r_theta (float)
         """
         self.calc_arm_pos_vertically(x, y)
         self.update_robot_adapted_base_robot_angles()

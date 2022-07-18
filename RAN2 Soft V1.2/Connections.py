@@ -26,6 +26,12 @@ class HandleConnection:
         conn.send(msg_length)
         conn.send(msg)
 
+    def send_msg_with_response(self, conn, msg: str):
+        self.send_msg(conn, msg)
+        response = self.recv_msg(conn).decode(self.FORMAT)
+        return response
+
+
 class Client(HandleConnection):
     def __init__(self, IP, PORT, HEADER, FORMAT):
         super().__init__(HEADER=HEADER, FORMAT=FORMAT)
@@ -33,6 +39,7 @@ class Client(HandleConnection):
         self.PORT = PORT
 
         self.connected = False
+
 
 class Server(HandleConnection):
     def __init__(self, HEADER, FORMAT):

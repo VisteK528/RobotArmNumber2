@@ -19,7 +19,9 @@ class RemoteControl:
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
         self.selected_joint = 1
-        self.j = [0 for _ in range(5)]
+
+        self._dof = 5  # Degrees of freedom
+        self.j = [0 for _ in range(self._dof)]
 
         self._free_mode = False
         self.axis = Axis()
@@ -53,16 +55,16 @@ class RemoteControl:
         pass
 
     def _reset_free_control_pos(self):
-        self.j = [0 for _ in range(1, 6)]
+        self.j = [0 for _ in range(self._dof)]
 
     def _select_joint(self):
         """
         Selects the joint which value has to be updated
         :return: -> None
         """
-        if 0 < self.selected_joint < 7:
+        if 0 < self.selected_joint <= self._dof:
             if self.joystick.get_button(5):
-                if self.selected_joint != 6:
+                if self.selected_joint != self._dof:
                     self.selected_joint += 1
                     time.sleep(0.2)
 
@@ -122,6 +124,10 @@ class RemoteControl:
             time.sleep(self._gripper_change_delay)
 
     def _display_free_control_data(self):
+        """
+        Displays current position of each joint selected in free control mode and gripper position
+        :return: -> None
+        """
         message = ""
         for i, x in enumerate(self.j, 1):
             message += f"Joint {i}: {x} "
@@ -140,6 +146,10 @@ class RemoteControl:
         self._display_free_control_data()
 
     def _display_position_control_data(self):
+        """
+        Displays currently selected position in position control mode in 3 Axis (X, Y, Z) and gripper position
+        :return: -> None
+        """
         print(f"X: {self.axis.x}\tY: {self.axis.y}\tZ: {self.axis.z}\tGripper: {self.gripper_pos}")
 
     def position_control(self):
@@ -183,14 +193,11 @@ class RemoteControl:
         self._round_data(ndigits=2)
         self._display_position_control_data()
 
-    def save_and_apply_changes(self):
-        pass
-
     def control(self):
         """
         Gets the data of all Xbox Controller Events, selects controlling mode (Free mode or Position Mode)
         and runs its method accordingly
-        :return: -> None
+        :return: -> None or bool
         """
         pygame.event.pump()
         if self.joystick.get_button(2):

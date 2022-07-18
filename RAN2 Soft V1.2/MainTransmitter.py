@@ -1,18 +1,12 @@
 from Connections import Client
 from RemoteControl import RemoteControl
-import time
 
 
 class Transmitter(Client):
     def __init__(self, host, port, HEADER=64, FORMAT='utf-8'):
         super().__init__(host, port, HEADER=HEADER, FORMAT=FORMAT)
         self.ADDR = (host, port)
-        self.xbox_controler = RemoteControl()
-
-    def _send_command(self, message):
-        self.send_msg(self.conn, message)
-        response = self.recv_msg(self.conn).decode(self.FORMAT)
-        return response
+        self.xbox_controller = RemoteControl()
 
     def console(self):
         self.conn = self.socket_connect(self.ADDR)
@@ -26,26 +20,26 @@ class Transmitter(Client):
                     message = input("Please type your message or type 'Quit' to leave console input: ")
                     if message.lower() == 'quit':
                         break
-                    response = self._send_command(message)
+                    response = self.send_msg_with_response(self.conn, message)
                     print(response)
             elif msg == 2:
                 print("Xbox Controller Input activated!")
                 while True:
-                    free_mode = self.xbox_controler.control()
+                    free_mode = self.xbox_controller.control()
 
                     if free_mode is not None:
                         if free_mode:
                             message = "True"
-                            for joint in self.xbox_controler.j:
+                            for joint in self.xbox_controller.j:
                                 message += ";"
                                 message += str(joint)
-                            response = self._send_command(message)
+                            response = self.send_msg_with_response(self.conn, message)
                             print(response)
 
                         elif not free_mode:
-                            message = f"False;{self.xbox_controler.axis.x};{self.xbox_controler.axis.y}" \
-                                      f";{self.xbox_controler.axis.z}"
-                            response = self._send_command(message)
+                            message = f"False;{self.xbox_controller.axis.x};{self.xbox_controller.axis.y}" \
+                                      f";{self.xbox_controller.axis.z}"
+                            response = self.send_msg_with_response(self.conn, message)
                             print(response)
 
             elif msg == 3:

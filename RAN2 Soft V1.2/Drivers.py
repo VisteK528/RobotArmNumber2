@@ -1,9 +1,10 @@
 import math
 import RPi.GPIO as GPIO
 import time
+from HelperClasses import Conversions
 
 
-class TMC2209:
+class TMC2209(Conversions):
     def __init__(self, step, dir, en, resolution, gear_teeth):
         self._STEP = step
         self._DIR = dir
@@ -62,7 +63,7 @@ class TMC2209:
             for x in delays_buff:
                 delays.append(x)
 
-            delays2 = [delay / 1000000 for delay in delays]
+            delays2 = [self._microsec_to_sec(delay) for delay in delays]
 
         else:
             for i in range(int(steps / 2) + 1):
@@ -81,7 +82,7 @@ class TMC2209:
             for x in delays_buff:
                 delays.append(x)
 
-            delays2 = [delay / 1000000 for delay in delays]
+            delays2 = [self._microsec_to_sec(delay) for delay in delays]
 
         GPIO.output(self._DIR, dir)
         for delay in delays2:
@@ -113,7 +114,7 @@ class TMC2209:
                 d = high_speed
             delays.append(d)
 
-        delays2 = [delay/1000000 for delay in delays]
+        delays2 = [self._microsec_to_sec(delay) for delay in delays]
 
         GPIO.output(self._DIR, dir)
         for delay in delays2:
@@ -127,7 +128,8 @@ class TMC2209:
             time.sleep(delay)
             GPIO.output(self._STEP, GPIO.HIGH)
 
-class AN4988Driver:
+
+class AN4988Driver(Conversions):
     def __init__(self, step, dir, en, resolution, gear_teeth):
         self._STEP = step
         self._DIR = dir
@@ -186,7 +188,7 @@ class AN4988Driver:
             for x in delays_buff:
                 delays.append(x)
 
-            delays2 = [delay / 1000000 for delay in delays]
+            delays2 = [self._microsec_to_sec(delay) for delay in delays]
 
         else:
             for i in range(int(steps / 2) + 1):
@@ -205,7 +207,7 @@ class AN4988Driver:
             for x in delays_buff:
                 delays.append(x)
 
-            delays2 = [delay / 1000000 for delay in delays]
+            delays2 = [self._microsec_to_sec(delay) for delay in delays]
 
         #self.enable()
         #GPIO.output(self._DIR, dir)
@@ -217,7 +219,8 @@ class AN4988Driver:
         GPIO.output(self._STEP, GPIO.LOW)
         #self.disable()
 
-class DM556Driver:
+
+class DM556Driver(Conversions):
     def __init__(self, DIR, PUL, driver_resolution, motor_resolution, gear_teeth):
         self._DIR = DIR
         self._PUL = PUL
@@ -245,9 +248,6 @@ class DM556Driver:
         GPIO.output(self._PUL, GPIO.LOW)
         time.sleep(delay)
         GPIO.output(self._PUL, GPIO.HIGH)
-
-    def _sec_to_milisec(self, seconds):
-        return seconds / 1000000
 
     def move_steps(self, steps, dir, accel=0.01):
         delays = []
@@ -281,7 +281,7 @@ class DM556Driver:
         for x in delays_buff:
             delays.append(x)
 
-        final_delays = [self._sec_to_milisec(x) for x in delays]
+        final_delays = [self._microsec_to_sec(x) for x in delays]
 
         for x in final_delays:
             if dir == 0:
@@ -292,6 +292,3 @@ class DM556Driver:
             GPIO.output(self._PUL, GPIO.LOW)
             time.sleep(x)
             GPIO.output(self._PUL, GPIO.HIGH)
-
-    def delayMicroseconds(self, n):
-        time.sleep(n / 1000000)
