@@ -25,4 +25,4 @@ The project is still under development
 
 
 ## Project Files
-Link to my Github repository containing STEP and STL files of robot arm -> [link](https://github.com/VisteK528/RAN-2-Files.git)
+Link to my Github repository containing STEP and STL files of robot arm -> [link](https://github.com/VisteK528/RAN2-Files.git)
