@@ -3,6 +3,10 @@ from HelperClasses import Conversions
 
 
 class Movement(Conversions):
+    """
+    Movement class handles all calculations regarding joint angular velocities, motor angular velocities.
+    It also computes all phase times needed during acceleration/deceleration and constant movement of the stepper motor
+    """
     def __init__(self, motor_step, driver_microstep, motor_shaft_gear_teeth, joint_gear_teeth):
         self._motor_step = motor_step
         self._driver_microstep = driver_microstep
@@ -14,7 +18,7 @@ class Movement(Conversions):
         self._speed_gear_ratio = self._motor_shaft_gear_teeth/self._joint_gear_teeth
         self._torque_gear_ratio = self._joint_gear_teeth/self._motor_shaft_gear_teeth
 
-    def motor_vel(self, phase_time):
+    def motor_vel(self, phase_time: float):
         integral_phase_time = phase_time * self._driver_microstep
 
         term = (360/self._motor_step) * integral_phase_time
@@ -22,15 +26,15 @@ class Movement(Conversions):
         angular_velocity = (2*math.pi)/term
         return angular_velocity
 
-    def phase_time(self, joint_ang_vel):
+    def phase_time(self, joint_ang_vel: float):
         motor_ang_vel = self.motor_vel_from_joint_vel(joint_ang_vel)
         return self._one_pulse_step/motor_ang_vel
 
-    def joint_vel_from_motor_vel(self, motor_ang_vel):
+    def joint_vel_from_motor_vel(self, motor_ang_vel: float):
         joint_ang_vel = motor_ang_vel * self._speed_gear_ratio
         return joint_ang_vel
 
-    def motor_vel_from_joint_vel(self, joint_ang_vel):
+    def motor_vel_from_joint_vel(self, joint_ang_vel: float):
         motor_ang_vel = joint_ang_vel/self._speed_gear_ratio
         return motor_ang_vel
 
@@ -97,12 +101,13 @@ class Movement(Conversions):
 
         return delays
 
-    """ Do wyrzucenia / poprawy"""
+    """ Do wyrzucenia / poprawy
     def constant_angular_velocity(self, joint_angular_velocity):
         motor_velocity = self.motor_vel_from_joint_vel(joint_angular_velocity)
 
         phase_time = self._one_pulse_step/motor_velocity
         return phase_time
+    """
 
     def calculate_all_variables(self, delays):
         time_series = []

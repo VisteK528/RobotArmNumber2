@@ -1,17 +1,27 @@
 from Connections import Client
 from RemoteControl import RemoteControl
+import os
 
 
 class Transmitter(Client):
-    def __init__(self, host, port, HEADER=64, FORMAT='utf-8'):
+    """
+    Class Transmitter handles all connectivity between remote desktop and local RaspberryPi4 which
+    directly drives the Arm.
+    """
+    def __init__(self, host: str, port: int, HEADER=64, FORMAT='utf-8'):
         super().__init__(host, port, HEADER=HEADER, FORMAT=FORMAT)
-        self.ADDR = (host, port)
+        self._ADDRESS = (host, port)
         self.xbox_controller = RemoteControl()
 
     def console(self):
-        self.conn = self.socket_connect(self.ADDR)
+        """
+        Remote Console
+        :return: -> None
+        """
+        self.connection = self.socket_connect(self._ADDRESS)
 
         while True:
+            os.system('cls')
             msg = int(input("Please select type of control:\n1)Console Input\n2)Xbox Controller Input\n"
                             "3)Quit\nYour choice: "))
             if msg == 1:
@@ -20,7 +30,7 @@ class Transmitter(Client):
                     message = input("Please type your message or type 'Quit' to leave console input: ")
                     if message.lower() == 'quit':
                         break
-                    response = self.send_msg_with_response(self.conn, message)
+                    response = self.send_msg_with_response(self.connection, message)
                     print(response)
             elif msg == 2:
                 print("Xbox Controller Input activated!")
@@ -33,22 +43,21 @@ class Transmitter(Client):
                             for joint in self.xbox_controller.j:
                                 message += ";"
                                 message += str(joint)
-                            response = self.send_msg_with_response(self.conn, message)
+                            response = self.send_msg_with_response(self.connection, message)
                             print(response)
 
                         elif not free_mode:
                             message = f"False;{self.xbox_controller.axis.x};{self.xbox_controller.axis.y}" \
                                       f";{self.xbox_controller.axis.z}"
-                            response = self.send_msg_with_response(self.conn, message)
+                            response = self.send_msg_with_response(self.connection, message)
                             print(response)
 
             elif msg == 3:
                 break
             else:
                 print("Invalid choice!")
-            print()
 
-        self.conn.close()
+        self.connection.close()
 
 
 host = input("Please type host IP: ")

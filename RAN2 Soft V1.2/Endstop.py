@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 
+
 class EndStop:
     def __init__(self, SIGNAL_PIN, type='up'):
         self._SIGNAL_PIN = SIGNAL_PIN

@@ -134,8 +134,7 @@ class Robot:
         for thread in threads:
             thread.join()
 
-    def _move_joints_to_the_pos(self, x: float, y: float, z: float, alignment: str):
-        assert type(x), type(y) == float
+    def _move_joints_to_the_cords(self, x: float, y: float, z: float, alignment: str):
 
         self.position_algorithm.calc_arm_pos(x, y, z, alignment)
 
@@ -168,7 +167,7 @@ class Robot:
 
     def _remote_control(self):
         self.server = Server(HEADER=64, FORMAT='utf-8')
-        conn, addr = self.server.start_host()
+        conn, address = self.server.start_host()
 
         while self.server.connected:
             msg = self.server.recv_msg(conn).decode(self.server.FORMAT)
@@ -178,39 +177,40 @@ class Robot:
                 data = msg.split(";")
                 free_mode = data.pop(0)
 
+                joint_values = [float(value) for value in data]
                 if free_mode:
-                    joint_values = [float(value) for value in data]
                     self._move_all_joints_to_the_pos(joint_values)
 
                 elif not free_mode:
-                    self._move_joints_to_the_pos(float(data[0]), float(data[1]), float(data[2]), alignment='horizontal')
+                    self._move_joints_to_the_cords(*joint_values, alignment='horizontal')
 
             self.server.send_msg(conn, "Message Received")
         conn.close()
 
     def console(self):
         while True:
-            message = input("").lower().split()
+            message = input(">").lower().split()
 
             if message[0] == "vposition":
                 x, y, z = float(message[1]), float(message[2]), float(message[3])
-                self._move_joints_to_the_pos(x, y, z, 'vertical')
+                self._move_joints_to_the_cords(x, y, z, 'vertical')
 
             elif message[0] == "hposition":
                 x, y, z = float(message[1]), float(message[2]), float(message[3])
-                self._move_joints_to_the_pos(x, y, z, 'horizontal')
+                self._move_joints_to_the_cords(x, y, z, 'horizontal')
 
             elif message[0] == 'remote':
                 self._remote_control()
 
             elif message[0] == "move":
                 motor, angle = message[1], message[2]
-                if str(angle) == 'home':
-                    self.joints[self.joints_names_dict[motor]].home()
-                else:
-                    self.joints[self.joints_names_dict[motor]].move_by_angle(float(angle))
+                self.joints[self.joints_names_dict[motor]].move_by_angle(float(angle))
 
-            time.sleep(2)
+            elif message[0] == "home":
+                motor = message[1]
+                self.joints[self.joints_names_dict[motor]].home()
+
+            time.sleep(1)
 
 
 algorithm = PositionAlgorithm(shoulder_len=20.76355, elbow_len=16.50985, effector_len=7.835, base_height=15,

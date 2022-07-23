@@ -1,5 +1,5 @@
 from Movement import Movement
-import RPi.GPIO as GPIO
+
 
 class Joint:
     def __init__(self, driver, sensor, gear_teeth, homing_direction="ANTICLOCKWISE"):
@@ -78,7 +78,7 @@ class Joint:
         for delay in delays:
             self.driver.move_del(delay)
 
-    def move_by_angle(self, pos):
+    def move_by_angle(self, pos: float):
         if self.position is not None:
             if self._min_pos <= pos < self._max_pos:
                 new_pos = self.position - pos
@@ -91,10 +91,10 @@ class Joint:
                         direction = 0  # GPIO.LOW  # Clockwise
                 else:
                     if new_pos >= 0:
-                        direction = GPIO.LOW  # Anticlockwise
+                        direction = 0  # Anticlockwise
 
                     else:
-                        direction = GPIO.HIGH  # Clockwise
+                        direction = 1  # Clockwise
 
                 new_pos = abs(new_pos)
                 steps = self._degrees_to_steps(new_pos)
@@ -103,11 +103,11 @@ class Joint:
 
     def home(self):
         if self.direction == 'ANTICLOCKWISE':
-            direction = GPIO.HIGH
-            direction2 = GPIO.LOW
+            direction = 1
+            direction2 = 0
         else:
-            direction = GPIO.LOW
-            direction2 = GPIO.HIGH
+            direction = 0
+            direction2 = 1
 
         # Calculate delays for the motor to accelerate smoothly to the set homing velocity ( Angular Velocity )
         # ( During PHASE 1 and PHASE 2 of the Homing procedure )
@@ -116,8 +116,8 @@ class Joint:
 
         # Calculate delays for the motor to move smoothly with constant, homing velocity ( Angular Velocity )
         # ( During PHASE 1 and PHASE 2 of the Homing procedure )
-        phase_time1 = self.movement.constant_angular_velocity(self.homing_velocity)
-        phase_time2 = self.movement.constant_angular_velocity(self.homing_velocity/5)
+        phase_time1 = self.movement.phase_time(self.homing_velocity)
+        phase_time2 = self.movement.phase_time(self.homing_velocity/5)
 
         # Start the homing procedure
         while True:

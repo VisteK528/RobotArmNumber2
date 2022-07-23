@@ -1,5 +1,6 @@
 import socket
 
+
 class HandleConnection:
     def __init__(self, HEADER, FORMAT):
         self.HEADER = HEADER
